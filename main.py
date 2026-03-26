@@ -25,7 +25,7 @@ def mostrar_cabecalho(titulo):
     print(CINZA + "-" * 40 + RESET)
     print(CINZA + "Receita: "    + RESET + VERDE + str(receita) + " EUR" + RESET +
           CINZA + "  Despesas: " + RESET + VERMELHO + str(total_desp) + " EUR" + RESET +
-          CINZA + "  Lucro por mês: "    + RESET + (VERDE_B if saldo >= 0 else VERMELHO_B) + BOLD + str(saldo) + " EUR" + RESET)
+          CINZA + "  Lucro por mes: " + RESET + (VERDE_B if saldo >= 0 else VERMELHO_B) + BOLD + str(saldo) + " EUR" + RESET)
     print(CINZA + "Lucro total: " + RESET +
           (VERDE_B if funcoes.saldo_acumulado >= 0 else VERMELHO_B) +
           BOLD + str(funcoes.saldo_acumulado) + " EUR" + RESET)
@@ -139,7 +139,7 @@ def criar_cliente():
     telefone        = pedir_telefone("Telefone: ")
     resumo_planos()
     id_plano        = pedir_id_valido("ID do plano: ", ids_planos())
-    data_inicio     = str(date.today()).replace("-","/")
+    data_inicio     = str(date.today()).replace("-", "/")
     print(VERDE + "DATA DE INICIO DO PLANO: " + MAGENTA + data_inicio + RESET)
     adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio)
     aguardar_enter()
@@ -158,9 +158,9 @@ def ler_cliente():
         return
     limpar_ecra()
     mostrar_clientes()
-    nome = pedir_nome_valido("Nome do cliente: ", list(clientes.keys()))
+    id_cliente = pedir_id_valido("ID do cliente: ", ids_clientes())
     limpar_ecra()
-    mostrar_cliente(nome)
+    mostrar_cliente(id_cliente)
     aguardar_enter()
 
 
@@ -171,10 +171,11 @@ def atualizar_cliente():
         return
     limpar_ecra()
     mostrar_clientes()
-    nome = pedir_nome_valido("Nome do cliente: ", list(clientes.keys()))
+    id_cliente = pedir_id_valido("ID do cliente: ", ids_clientes())
     print(CINZA + "(Enter para manter o valor actual)" + RESET)
-    data_nascimento = input(AMARELO + "Nova data nascimento (DD/MM/AAAA): " + RESET).strip()
-    telefone        = input(AMARELO + "Novo telefone: "                     + RESET).strip()
+    nome            = input(AMARELO + "Novo nome: "                          + RESET).strip()
+    data_nascimento = input(AMARELO + "Nova data nascimento (DD/MM/AAAA): "  + RESET).strip()
+    telefone        = input(AMARELO + "Novo telefone: "                      + RESET).strip()
     id_plano_str    = ""
     if len(planos) > 0:
         resumo_planos()
@@ -184,7 +185,7 @@ def atualizar_cliente():
             resumo_planos()
             id_plano_str = input(AMARELO + "Novo ID do plano: " + RESET).strip()
     data_inicio = input(AMARELO + "Nova data inicio (DD/MM/AAAA): " + RESET).strip()
-    modificar_cliente(nome, data_nascimento, telefone, id_plano_str, data_inicio)
+    modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio)
     aguardar_enter()
 
 
@@ -195,10 +196,10 @@ def deletar_cliente():
         return
     limpar_ecra()
     mostrar_clientes()
-    nome      = pedir_nome_valido("Nome do cliente: ", list(clientes.keys()))
-    confirmar = pedir_confirmacao("Confirmar remocao")
+    id_cliente = pedir_id_valido("ID do cliente: ", ids_clientes())
+    confirmar  = pedir_confirmacao("Confirmar remocao")
     if confirmar:
-        remover_cliente(nome)
+        remover_cliente(id_cliente)
     else:
         print(CINZA + "Cancelado." + RESET)
     aguardar_enter()
@@ -287,11 +288,11 @@ def deletar_despesa():
 def menu_despesas():
     while True:
         mostrar_cabecalho("DESPESAS")
-        print(MAGENTA + BOLD + "[1]" + RESET + " " + BRANCO + "Criar despesa"  + RESET)
-        print(MAGENTA + BOLD + "[2]" + RESET + " " + BRANCO + "Ler despesas"   + RESET)
-        print(MAGENTA + BOLD + "[3]" + RESET + " " + BRANCO + "Ler despesa"    + RESET)
-        print(MAGENTA + BOLD + "[4]" + RESET + " " + BRANCO + "Deletar despesa"+ RESET)
-        print(MAGENTA + BOLD + "[0]" + RESET + " " + BRANCO + "Voltar"         + RESET)
+        print(MAGENTA + BOLD + "[1]" + RESET + " " + BRANCO + "Criar despesa"   + RESET)
+        print(MAGENTA + BOLD + "[2]" + RESET + " " + BRANCO + "Ler despesas"    + RESET)
+        print(MAGENTA + BOLD + "[3]" + RESET + " " + BRANCO + "Ler despesa"     + RESET)
+        print(MAGENTA + BOLD + "[4]" + RESET + " " + BRANCO + "Deletar despesa" + RESET)
+        print(MAGENTA + BOLD + "[0]" + RESET + " " + BRANCO + "Voltar"          + RESET)
         print(CINZA + "-" * 40 + RESET)
         opcao = input(MAGENTA + BOLD + "> " + RESET).strip()
 
