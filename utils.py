@@ -1,7 +1,6 @@
-from CoresANSII import *
+from CoresANSII import AMARELO, VERMELHO_B, RESET
 
-
-def pedir_texto(mensagem):
+def _pedir_texto(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
@@ -13,8 +12,7 @@ def pedir_texto(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_telefone(mensagem):
+def _pedir_telefone(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
@@ -28,8 +26,7 @@ def pedir_telefone(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_inteiro_positivo(mensagem):
+def _pedir_inteiro_positivo(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
@@ -42,8 +39,7 @@ def pedir_inteiro_positivo(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_decimal_positivo(mensagem):
+def _pedir_decimal_positivo(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
@@ -56,8 +52,7 @@ def pedir_decimal_positivo(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_data(mensagem):
+def _pedir_data(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + " (DD/MM/AAAA): " + RESET).strip()
@@ -66,9 +61,9 @@ def pedir_data(mensagem):
             partes = valor.split("/")
             if len(partes) != 3:
                 raise ValueError("Formato invalido. Usa DD/MM/AAAA.")
-            dia   = int(partes[0])
-            mes   = int(partes[1])
-            ano   = int(partes[2])
+            dia = int(partes[0])
+            mes = int(partes[1])
+            ano = int(partes[2])
             if dia < 1 or dia > 31:
                 raise ValueError("Dia invalido.")
             if mes < 1 or mes > 12:
@@ -79,8 +74,7 @@ def pedir_data(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_confirmacao(mensagem):
+def _pedir_confirmacao(mensagem):
     while True:
         try:
             valor = input(AMARELO + mensagem + " (s/n): " + RESET).strip().lower()
@@ -90,8 +84,7 @@ def pedir_confirmacao(mensagem):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_id_valido(mensagem, ids_validos):
+def _pedir_id_valido(mensagem, ids_validos):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
@@ -104,8 +97,7 @@ def pedir_id_valido(mensagem, ids_validos):
         except ValueError as erro:
             print(VERMELHO_B + "Erro: " + str(erro) + RESET)
 
-
-def pedir_nome_valido(mensagem, nomes_validos):
+def _pedir_nome_valido(mensagem, nomes_validos):
     while True:
         try:
             valor = input(AMARELO + mensagem + RESET).strip()
