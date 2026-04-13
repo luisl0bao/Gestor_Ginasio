@@ -1,7 +1,7 @@
-from Gestor_Ginasio.src import dados
+from src import dados
 from dados import clientes
-from planos import obter_plano
-from CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, VERDE, CINZA, BOLD, RESET, MAGENTA
+from src.planos import obter_plano
+from src.CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, VERDE, CINZA, BOLD, RESET, MAGENTA
 # __Crud_____
 
 def _arredondar(valor):
