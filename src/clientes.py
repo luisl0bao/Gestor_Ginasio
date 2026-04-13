@@ -1,5 +1,5 @@
 from src import dados
-from dados import clientes
+from src.dados import clientes
 from src.planos import obter_plano
 from src.CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, VERDE, CINZA, BOLD, RESET, MAGENTA
 # __Crud_____
