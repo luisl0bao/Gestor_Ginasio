@@ -1,8 +1,8 @@
 import os
 from CoresANSII import VERDE, VERDE_B, VERMELHO, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, MAGENTA
-import dados
+from Gestor_Ginasio.src import dados
 from dados import clientes, planos, despesas
-from planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
+from Gestor_Ginasio.src.planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
                     remover_plano, _ids_planos)
 from clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
                       remover_cliente, pesquisar_cliente, _ids_clientes)
