@@ -1,14 +1,14 @@
 import os
-from CoresANSII import VERDE, VERDE_B, VERMELHO, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, MAGENTA
-from Gestor_Ginasio.src import dados
+from src.CoresANSII import VERDE, VERDE_B, VERMELHO, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, MAGENTA
+from src import dados
 from dados import clientes, planos, despesas
-from Gestor_Ginasio.src.planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
+from src.planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
                     remover_plano, _ids_planos)
-from clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
+from src.clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
                       remover_cliente, pesquisar_cliente, _ids_clientes)
-from despesas import (adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa)
-from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes
-from utils import (_pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo,
+from src.despesas import (adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa)
+from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes
+from src.utils import (_pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo,
                    _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao)
 from datetime import date
 
