@@ -1,7 +1,7 @@
 import os
 from src.CoresANSII import VERDE, VERDE_B, VERMELHO, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, MAGENTA
 from src import dados
-from dados import clientes, planos, despesas
+from src.dados import clientes, planos, despesas
 from src.planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
                     remover_plano, _ids_planos)
 from src.clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
