@@ -1,4 +1,4 @@
-from Gestor_Ginasio.src.CoresANSII import AMARELO, VERMELHO_B, RESET
+from src.CoresANSII import AMARELO, VERMELHO_B, RESET
 
 def _pedir_texto(mensagem):
     while True:
