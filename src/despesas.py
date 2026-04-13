@@ -1,6 +1,6 @@
-from Gestor_Ginasio.src import dados
+from src import dados
 from dados import despesas
-from CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, VERMELHO, VERDE
+from src.CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, VERMELHO, VERDE
 
 # __Crud_____
 
