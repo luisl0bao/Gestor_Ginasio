@@ -1,5 +1,5 @@
 from src import dados
-from dados import clientes, planos, despesas
+from src.dados import clientes, planos, despesas
 from src.planos import obter_plano
 from src.CoresANSII import VERDE, VERDE_B, VERMELHO, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, MAGENTA
 
