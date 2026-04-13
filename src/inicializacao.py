@@ -1,6 +1,6 @@
-from Gestor_Ginasio.src import planos
-from Gestor_Ginasio.src import clientes
-from Gestor_Ginasio.src import despesas
+from src import planos
+from src import clientes
+from src import despesas
 
 def carregar_dados():
     adicionar_plano("Basico", 8, 3.50)
