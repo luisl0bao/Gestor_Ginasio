@@ -1,5 +1,5 @@
 from src import dados
-from dados import despesas
+from src.dados import despesas
 from src.CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, VERMELHO, VERDE
 
 # __Crud_____
