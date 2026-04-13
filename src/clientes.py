@@ -1,4 +1,4 @@
-import dados
+from Gestor_Ginasio.src import dados
 from dados import clientes
 from planos import obter_plano
 from CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, VERDE, CINZA, BOLD, RESET, MAGENTA
