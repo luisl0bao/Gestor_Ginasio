@@ -1,5 +1,5 @@
 from src import dados
-from dados import planos
+from src.dados import planos
 from src.CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, VERDE, CINZA, BOLD, RESET
 
 # __Crud_____
