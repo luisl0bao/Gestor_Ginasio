@@ -1,4 +1,4 @@
-import dados
+from Gestor_Ginasio.src import dados
 from dados import despesas
 from CoresANSII import VERDE_B, VERMELHO_B, AMARELO, BRANCO, CINZA, BOLD, RESET, VERMELHO, VERDE
 
