@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from src import dados
     from src.dados import despesas
@@ -20,15 +24,12 @@ def _arredondar(valor):
 
 def adicionar_despesa(descricao, valor):
     if not descricao:
-        print(_VERMELHO_B + "[HTTP 400] Descricao invalida." + _RESET)
         return None, 400
     if not isinstance(valor, (int, float)) or valor <= 0:
-        print(_VERMELHO_B + "[HTTP 400] Valor invalido." + _RESET)
         return None, 400
     nova = (dados.proximo_id_despesa, descricao, _arredondar(valor))
     despesas.append(nova)
     dados.proximo_id_despesa = dados.proximo_id_despesa + 1
-    print(_VERDE_B + "[HTTP 201] Despesa registada." + _RESET)
     return nova, 201
 
 def obter_despesa(id_despesa):
@@ -41,14 +42,11 @@ def remover_despesa(id_despesa):
     for despesa in despesas:
         if despesa[0] == id_despesa:
             despesas.remove(despesa)
-            print(_VERDE_B + "[HTTP 200] Despesa removida." + _RESET)
             return id_despesa, 200
-    print(_VERMELHO_B + "[HTTP 404] Despesa nao encontrada." + _RESET)
     return None, 404
 
 def mostrar_despesas():
     if len(despesas) == 0:
-        print(_AMARELO + "[HTTP 204] Nenhuma despesa registada." + _RESET)
         return [], 204
     print()
     print(_VERDE + _BOLD + "[ DESPESAS ]" + _RESET)
@@ -63,7 +61,6 @@ def mostrar_despesas():
 def mostrar_despesa(id_despesa):
     despesa, codigo = obter_despesa(id_despesa)
     if codigo == 404:
-        print(_VERMELHO_B + "[HTTP 404] Despesa nao encontrada." + _RESET)
         return None, 404
     print()
     print(_VERDE + _BOLD + "[ DESPESA ]" + _RESET)
