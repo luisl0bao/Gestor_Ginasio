@@ -45,6 +45,7 @@ Cada cliente é representado por um dicionário com os seguintes dados:
 clientes = {
     1: ("João Silva", "2000-05-10", "912345678", 1, "2026-01-01")
 }
+```
 🔹 Entidade: Plano
 
 Os planos de treino também são armazenados em dicionários com:
@@ -55,10 +56,11 @@ Número de treinos
 Preço (mensal ou por treino)
 
 📌 Exemplo:
-
+```python
 planos = {
     101: ("Plano Mensal", 12, 30.0)
 }
+```
 🔄 Operações CRUD
 
 O sistema implementa as principais operações de gestão de dados:
