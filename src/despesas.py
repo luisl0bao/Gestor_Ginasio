@@ -4,6 +4,7 @@ try:
 except ImportError:
     import dados
     from dados import despesas
+
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
 _BRANCO     = "\033[97m"
@@ -18,39 +19,37 @@ def _arredondar(valor):
     return round(valor, 2)
 
 def adicionar_despesa(descricao, valor):
-    """[HTTP 201/400] Regista uma nova despesa."""
-    try:
-        if not descricao:
-            raise ValueError("[HTTP 400] Descricao invalida.")
-        if not isinstance(valor, (int, float)) or valor <= 0:
-            raise ValueError("[HTTP 400] Valor invalido.")
-        despesas.append((dados.proximo_id_despesa, descricao, _arredondar(valor)))
-        dados.proximo_id_despesa = dados.proximo_id_despesa + 1
-        print(_VERDE_B + "[HTTP 201] Despesa registada." + _RESET)
-    except ValueError as erro:
-        print(_VERMELHO_B + "Erro: " + str(erro) + _RESET)
+    if not descricao:
+        print(_VERMELHO_B + "[HTTP 400] Descricao invalida." + _RESET)
+        return None, 400
+    if not isinstance(valor, (int, float)) or valor <= 0:
+        print(_VERMELHO_B + "[HTTP 400] Valor invalido." + _RESET)
+        return None, 400
+    nova = (dados.proximo_id_despesa, descricao, _arredondar(valor))
+    despesas.append(nova)
+    dados.proximo_id_despesa = dados.proximo_id_despesa + 1
+    print(_VERDE_B + "[HTTP 201] Despesa registada." + _RESET)
+    return nova, 201
 
 def obter_despesa(id_despesa):
-    """[HTTP 200/404] Devolve a despesa ou None se nao existir."""
     for despesa in despesas:
         if despesa[0] == id_despesa:
-            return despesa
-    return None
+            return despesa, 200
+    return None, 404
 
 def remover_despesa(id_despesa):
-    """[HTTP 200/404] Remove uma despesa."""
     for despesa in despesas:
         if despesa[0] == id_despesa:
             despesas.remove(despesa)
             print(_VERDE_B + "[HTTP 200] Despesa removida." + _RESET)
-            return
+            return id_despesa, 200
     print(_VERMELHO_B + "[HTTP 404] Despesa nao encontrada." + _RESET)
+    return None, 404
 
 def mostrar_despesas():
-    """[HTTP 200/204] Lista todas as despesas."""
     if len(despesas) == 0:
         print(_AMARELO + "[HTTP 204] Nenhuma despesa registada." + _RESET)
-        return
+        return [], 204
     print()
     print(_VERDE + _BOLD + "[ DESPESAS ]" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
@@ -59,13 +58,13 @@ def mostrar_despesas():
         print(_CINZA   + "Descricao: " + _RESET + _BRANCO   + despesa[1]      + _RESET)
         print(_CINZA   + "Valor: "     + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
+    return list(despesas), 200
 
 def mostrar_despesa(id_despesa):
-    """[HTTP 200/404] Mostra detalhes de uma despesa."""
-    despesa = obter_despesa(id_despesa)
-    if despesa is None:
+    despesa, codigo = obter_despesa(id_despesa)
+    if codigo == 404:
         print(_VERMELHO_B + "[HTTP 404] Despesa nao encontrada." + _RESET)
-        return
+        return None, 404
     print()
     print(_VERDE + _BOLD + "[ DESPESA ]" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
@@ -73,3 +72,4 @@ def mostrar_despesa(id_despesa):
     print(_CINZA   + "Descricao: " + _RESET + _BRANCO   + despesa[1]      + _RESET)
     print(_CINZA   + "Valor: "     + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
+    return despesa, 200
