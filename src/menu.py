@@ -1,30 +1,26 @@
 import os
+import sys
 from datetime import date
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from src import dados
     from src.dados import clientes, planos, despesas
-    from src.planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
-                            remover_plano, _ids_planos, _resumo_planos)
-    from src.clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
-                              remover_cliente, pesquisar_cliente, _ids_clientes)
-    from src.despesas import (adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa)
-    from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes
-    from src.relatorios import _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
-    from src.utils import (_pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo,
-                           _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao)
+    from src.planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
+    from src.clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
+    from src.despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
+    from src.utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
 except ImportError:
     import dados
     from dados import clientes, planos, despesas
-    from planos import (adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano,
-                        remover_plano, _ids_planos, _resumo_planos)
-    from clientes import (adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente,
-                          remover_cliente, pesquisar_cliente, _ids_clientes)
-    from despesas import (adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa)
-    from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes
-    from relatorios import _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
-    from utils import (_pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo,
-                       _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao)
+    from planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
+    from clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
+    from despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
+    from utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
+
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
 _BRANCO     = "\033[97m"
@@ -45,9 +41,9 @@ def _aguardar_enter():
 
 def _mostrar_cabecalho(titulo):
     _limpar_ecra()
-    receita   = _calcular_receita_mensal()
+    receita    = _calcular_receita_mensal()
     total_desp = _calcular_total_despesas()
-    saldo     = _calcular_saldo()
+    saldo      = _calcular_saldo()
     print()
     print(_VERDE + _BOLD + "[ " + titulo + " ]" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
@@ -65,69 +61,77 @@ def _criar_plano():
     _limpar_ecra()
     print(_VERDE + _BOLD + "[ NOVO PLANO ]" + _RESET)
     print()
-    try:
-        nome        = _pedir_texto("Nome do plano: ")
-        num_treinos = _pedir_inteiro_positivo("Numero de treinos por mes: ")
-        preco_treino = _pedir_decimal_positivo("Preco por treino (EUR): ")
-        adicionar_plano(nome, num_treinos, preco_treino)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    nome         = _pedir_texto("Nome do plano: ")
+    num_treinos  = _pedir_inteiro_positivo("Numero de treinos por mes: ")
+    preco_treino = _pedir_decimal_positivo("Preco por treino (EUR): ")
+    obj, codigo  = adicionar_plano(nome, num_treinos, preco_treino)
+    if codigo == 201:
+        print(_VERDE_B + str(codigo) + " Sucesso, plano " + str(obj[0]) + " adicionado." + _RESET)
+    elif codigo == 400:
+        print(_VERMELHO_B + str(codigo) + " Dados invalidos." + _RESET)
     _aguardar_enter()
 
 def _ler_planos():
     _limpar_ecra()
-    mostrar_planos()
+    obj, codigo = mostrar_planos()
+    if codigo == 204:
+        print(_AMARELO + str(codigo) + " Nenhum plano registado." + _RESET)
     _aguardar_enter()
 
 def _ler_plano():
     if len(planos) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum plano." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum plano." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_planos()
-    try:
-        id_plano = _pedir_id_valido("ID do plano: ", _ids_planos())
-        _limpar_ecra()
-        mostrar_plano(id_plano)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    id_plano    = _pedir_id_valido("ID do plano: ", _ids_planos())
+    _limpar_ecra()
+    obj, codigo = mostrar_plano(id_plano)
+    if codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Plano nao encontrado." + _RESET)
     _aguardar_enter()
 
 def _atualizar_plano():
     if len(planos) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum plano." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum plano." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_planos()
-    try:
-        id_plano = _pedir_id_valido("ID do plano: ", _ids_planos())
-        print(_CINZA + "(Enter para manter o valor actual)" + _RESET)
-        nome        = input(_AMARELO + "Novo nome: "         + _RESET).strip()
-        num_treinos = input(_AMARELO + "Novo num. treinos: " + _RESET).strip()
-        preco_treino = input(_AMARELO + "Novo preco/treino: " + _RESET).strip()
-        modificar_plano(id_plano, nome, num_treinos, preco_treino)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    id_plano     = _pedir_id_valido("ID do plano: ", _ids_planos())
+    print(_CINZA + "(Enter para manter o valor actual)" + _RESET)
+    nome         = input(_AMARELO + "Novo nome: "         + _RESET).strip()
+    num_treinos  = input(_AMARELO + "Novo num. treinos: " + _RESET).strip()
+    preco_treino = input(_AMARELO + "Novo preco/treino: " + _RESET).strip()
+    obj, codigo  = modificar_plano(id_plano, nome, num_treinos, preco_treino)
+    if codigo == 200:
+        print(_VERDE_B + str(codigo) + " Sucesso, plano " + str(obj[0]) + " atualizado." + _RESET)
+    elif codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Plano nao encontrado." + _RESET)
+    elif codigo == 400:
+        print(_VERMELHO_B + str(codigo) + " Dados invalidos." + _RESET)
     _aguardar_enter()
 
 def _deletar_plano():
     if len(planos) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum plano." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum plano." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_planos()
-    try:
-        id_plano = _pedir_id_valido("ID do plano: ", _ids_planos())
-        confirmar = _pedir_confirmacao("Confirmar remocao")
-        if confirmar:
-            remover_plano(id_plano)
-        else:
-            print(_CINZA + "Cancelado." + _RESET)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    id_plano  = _pedir_id_valido("ID do plano: ", _ids_planos())
+    confirmar = _pedir_confirmacao("Confirmar remocao")
+    if confirmar:
+        obj, codigo = remover_plano(id_plano)
+        if codigo == 200:
+            print(_VERDE_B + str(codigo) + " Sucesso, plano " + str(obj) + " removido." + _RESET)
+        elif codigo == 404:
+            print(_VERMELHO_B + str(codigo) + " Plano nao encontrado." + _RESET)
+        elif codigo == 409:
+            print(_VERMELHO_B + str(codigo) + " Conflito: existem clientes com este plano. Remove-os primeiro." + _RESET)
+    else:
+        print(_CINZA + "Cancelado." + _RESET)
     _aguardar_enter()
 
 def menu_planos():
@@ -141,7 +145,6 @@ def menu_planos():
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
-
         if   opcao == "1": _criar_plano()
         elif opcao == "2": _ler_planos()
         elif opcao == "3": _ler_plano()
@@ -149,93 +152,105 @@ def menu_planos():
         elif opcao == "5": _deletar_plano()
         elif opcao == "0": break
         else:
-            print(_VERMELHO_B + "[HTTP 400] Opcao invalida." + _RESET)
+            print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
             _aguardar_enter()
 
 def _criar_cliente():
     if len(planos) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum plano. Cria um plano primeiro." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum plano. Cria um plano primeiro." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     print(_VERDE + _BOLD + "[ NOVO CLIENTE ]" + _RESET)
     print()
-    try:
-        nome             = _pedir_texto("Nome: ")
-        data_nascimento  = _pedir_data("Data de nascimento")
-        telefone         = _pedir_telefone("Telefone: ")
-        _resumo_planos()
-        id_plano         = _pedir_id_valido("ID do plano: ", _ids_planos())
-        data_inicio      = str(date.today()).replace("-", "/")
-        print(_VERDE + "DATA DE INICIO DO PLANO: " + _MAGENTA + data_inicio + _RESET)
-        adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    nome            = _pedir_texto("Nome: ")
+    data_nascimento = _pedir_data("Data de nascimento")
+    telefone        = _pedir_telefone("Telefone: ")
+    _resumo_planos()
+    id_plano        = _pedir_id_valido("ID do plano: ", _ids_planos())
+    data_inicio     = str(date.today()).replace("-", "/")
+    print(_VERDE + "DATA DE INICIO DO PLANO: " + _MAGENTA + data_inicio + _RESET)
+    obj, codigo     = adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio)
+    if codigo == 201:
+        print(_VERDE_B + str(codigo) + " Sucesso, cliente " + str(obj["nome"]) + " adicionado." + _RESET)
+    elif codigo == 409:
+        print(_VERMELHO_B + str(codigo) + " Conflito: ja existe um cliente com esse nome." + _RESET)
+    elif codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Plano nao encontrado." + _RESET)
+    elif codigo == 400:
+        print(_VERMELHO_B + str(codigo) + " Dados invalidos." + _RESET)
     _aguardar_enter()
 
 def _ler_clientes():
     _limpar_ecra()
-    mostrar_clientes()
+    obj, codigo = mostrar_clientes()
+    if codigo == 204:
+        print(_AMARELO + str(codigo) + " Nenhum cliente registado." + _RESET)
     _aguardar_enter()
 
 def _ler_cliente():
     if len(clientes) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum cliente." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum cliente." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_clientes()
-    try:
-        id_cliente = _pedir_id_valido("ID do cliente: ", _ids_clientes())
-        _limpar_ecra()
-        mostrar_cliente(id_cliente)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    id_cliente  = _pedir_id_valido("ID do cliente: ", _ids_clientes())
+    _limpar_ecra()
+    obj, codigo = mostrar_cliente(id_cliente)
+    if codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Cliente nao encontrado." + _RESET)
     _aguardar_enter()
 
 def _atualizar_cliente():
     if len(clientes) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum cliente." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum cliente." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_clientes()
-    try:
-        id_cliente      = _pedir_id_valido("ID do cliente: ", _ids_clientes())
-        print(_CINZA + "(Enter para manter o valor actual)" + _RESET)
-        nome            = input(_AMARELO + "Novo nome: "                              + _RESET).strip()
-        data_nascimento = input(_AMARELO + "Nova data nascimento (DD/MM/AAAA): "      + _RESET).strip()
-        telefone        = input(_AMARELO + "Novo telefone: "                          + _RESET).strip()
-        id_plano_str    = ""
-        if len(planos) > 0:
+    id_cliente      = _pedir_id_valido("ID do cliente: ", _ids_clientes())
+    print(_CINZA + "(Enter para manter o valor actual)" + _RESET)
+    nome            = input(_AMARELO + "Novo nome: "                         + _RESET).strip()
+    data_nascimento = input(_AMARELO + "Nova data nascimento (DD/MM/AAAA): " + _RESET).strip()
+    telefone        = input(_AMARELO + "Novo telefone: "                     + _RESET).strip()
+    id_plano_str    = ""
+    if len(planos) > 0:
+        _resumo_planos()
+        id_plano_str = input(_AMARELO + "Novo ID do plano: " + _RESET).strip()
+        while id_plano_str != "" and not (id_plano_str.isdigit() and int(id_plano_str) in _ids_planos()):
+            print(_VERMELHO_B + "400 ID invalido." + _RESET)
             _resumo_planos()
             id_plano_str = input(_AMARELO + "Novo ID do plano: " + _RESET).strip()
-            while id_plano_str != "" and not (id_plano_str.isdigit() and int(id_plano_str) in _ids_planos()):
-                print(_VERMELHO_B + "[HTTP 400] ID invalido." + _RESET)
-                _resumo_planos()
-                id_plano_str = input(_AMARELO + "Novo ID do plano: " + _RESET).strip()
-        data_inicio = input(_AMARELO + "Nova data inicio (DD/MM/AAAA): " + _RESET).strip()
-        modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    data_inicio = input(_AMARELO + "Nova data inicio (DD/MM/AAAA): " + _RESET).strip()
+    obj, codigo = modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio)
+    if codigo == 200:
+        print(_VERDE_B + str(codigo) + " Sucesso, cliente " + str(obj["nome"]) + " atualizado." + _RESET)
+    elif codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Cliente ou plano nao encontrado." + _RESET)
+    elif codigo == 409:
+        print(_VERMELHO_B + str(codigo) + " Conflito: ja existe um cliente com esse nome." + _RESET)
+    elif codigo == 400:
+        print(_VERMELHO_B + str(codigo) + " Dados invalidos." + _RESET)
     _aguardar_enter()
 
 def _deletar_cliente():
     if len(clientes) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhum cliente." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhum cliente." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_clientes()
-    try:
-        id_cliente = _pedir_id_valido("ID do cliente: ", _ids_clientes())
-        confirmar  = _pedir_confirmacao("Confirmar remocao")
-        if confirmar:
-            remover_cliente(id_cliente)
-        else:
-            print(_CINZA + "Cancelado." + _RESET)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    id_cliente = _pedir_id_valido("ID do cliente: ", _ids_clientes())
+    confirmar  = _pedir_confirmacao("Confirmar remocao")
+    if confirmar:
+        obj, codigo = remover_cliente(id_cliente)
+        if codigo == 200:
+            print(_VERDE_B + str(codigo) + " Sucesso, cliente " + str(obj) + " removido." + _RESET)
+        elif codigo == 404:
+            print(_VERMELHO_B + str(codigo) + " Cliente nao encontrado." + _RESET)
+    else:
+        print(_CINZA + "Cancelado." + _RESET)
     _aguardar_enter()
 
 def menu_clientes():
@@ -250,7 +265,6 @@ def menu_clientes():
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"            + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
-
         if   opcao == "1": _criar_cliente()
         elif opcao == "2": _ler_clientes()
         elif opcao == "3": _ler_cliente()
@@ -258,67 +272,71 @@ def menu_clientes():
         elif opcao == "5": _deletar_cliente()
         elif opcao == "6":
             _limpar_ecra()
-            try:
-                pesquisa = _pedir_texto("Nome a pesquisar: ")
-                pesquisar_cliente(pesquisa)
-            except Exception as erro:
-                print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+            pesquisa    = _pedir_texto("Nome a pesquisar: ")
+            obj, codigo = pesquisar_cliente(pesquisa)
+            if codigo == 404:
+                print(_AMARELO + str(codigo) + " Nenhum cliente encontrado." + _RESET)
+            elif codigo == 400:
+                print(_VERMELHO_B + str(codigo) + " Termo de pesquisa invalido." + _RESET)
             _aguardar_enter()
         elif opcao == "0": break
         else:
-            print(_VERMELHO_B + "[HTTP 400] Opcao invalida." + _RESET)
+            print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
             _aguardar_enter()
 
 def _criar_despesa():
     _limpar_ecra()
     print(_VERDE + _BOLD + "[ NOVA DESPESA ]" + _RESET)
     print()
-    try:
-        descricao = _pedir_texto("Descricao: ")
-        valor     = _pedir_decimal_positivo("Valor (EUR): ")
-        adicionar_despesa(descricao, valor)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    descricao   = _pedir_texto("Descricao: ")
+    valor       = _pedir_decimal_positivo("Valor (EUR): ")
+    obj, codigo = adicionar_despesa(descricao, valor)
+    if codigo == 201:
+        print(_VERDE_B + str(codigo) + " Sucesso, despesa " + str(obj[1]) + " adicionada." + _RESET)
+    elif codigo == 400:
+        print(_VERMELHO_B + str(codigo) + " Dados invalidos." + _RESET)
     _aguardar_enter()
 
 def _ler_despesas():
     _limpar_ecra()
-    mostrar_despesas()
+    obj, codigo = mostrar_despesas()
+    if codigo == 204:
+        print(_AMARELO + str(codigo) + " Nenhuma despesa registada." + _RESET)
     _aguardar_enter()
 
 def _ler_despesa():
     if len(despesas) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhuma despesa." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhuma despesa." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_despesas()
-    try:
-        ids_validos = [d[0] for d in despesas]
-        id_despesa  = _pedir_id_valido("ID da despesa: ", ids_validos)
-        _limpar_ecra()
-        mostrar_despesa(id_despesa)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    ids_validos = [d[0] for d in despesas]
+    id_despesa  = _pedir_id_valido("ID da despesa: ", ids_validos)
+    _limpar_ecra()
+    obj, codigo = mostrar_despesa(id_despesa)
+    if codigo == 404:
+        print(_VERMELHO_B + str(codigo) + " Despesa nao encontrada." + _RESET)
     _aguardar_enter()
 
 def _deletar_despesa():
     if len(despesas) == 0:
-        print(_VERMELHO_B + "[HTTP 404] Nao existe nenhuma despesa." + _RESET)
+        print(_VERMELHO_B + "404 Nao existe nenhuma despesa." + _RESET)
         _aguardar_enter()
         return
     _limpar_ecra()
     mostrar_despesas()
-    try:
-        ids_validos = [d[0] for d in despesas]
-        id_despesa  = _pedir_id_valido("ID da despesa: ", ids_validos)
-        confirmar   = _pedir_confirmacao("Confirmar remocao")
-        if confirmar:
-            remover_despesa(id_despesa)
-        else:
-            print(_CINZA + "Cancelado." + _RESET)
-    except Exception as erro:
-        print(_VERMELHO_B + "[HTTP 500] Erro inesperado: " + str(erro) + _RESET)
+    ids_validos = [d[0] for d in despesas]
+    id_despesa  = _pedir_id_valido("ID da despesa: ", ids_validos)
+    confirmar   = _pedir_confirmacao("Confirmar remocao")
+    if confirmar:
+        obj, codigo = remover_despesa(id_despesa)
+        if codigo == 200:
+            print(_VERDE_B + str(codigo) + " Sucesso, despesa " + str(obj) + " removida." + _RESET)
+        elif codigo == 404:
+            print(_VERMELHO_B + str(codigo) + " Despesa nao encontrada." + _RESET)
+    else:
+        print(_CINZA + "Cancelado." + _RESET)
     _aguardar_enter()
 
 def menu_despesas():
@@ -331,14 +349,13 @@ def menu_despesas():
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
-
         if   opcao == "1": _criar_despesa()
         elif opcao == "2": _ler_despesas()
         elif opcao == "3": _ler_despesa()
         elif opcao == "4": _deletar_despesa()
         elif opcao == "0": break
         else:
-            print(_VERMELHO_B + "[HTTP 400] Opcao invalida." + _RESET)
+            print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
             _aguardar_enter()
 
 def menu_principal():
@@ -353,26 +370,31 @@ def menu_principal():
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Sair"                 + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
-
         if   opcao == "1": menu_clientes()
         elif opcao == "2": menu_planos()
         elif opcao == "3": menu_despesas()
         elif opcao == "4":
             _limpar_ecra()
-            mostrar_relatorio_financeiro()
+            obj, codigo = mostrar_relatorio_financeiro()
+            if codigo == 500:
+                print(_VERMELHO_B + str(codigo) + " Erro interno ao gerar relatorio." + _RESET)
             _aguardar_enter()
         elif opcao == "5":
             _limpar_ecra()
-            mostrar_estatisticas()
+            obj, codigo = mostrar_estatisticas()
+            if codigo == 500:
+                print(_VERMELHO_B + str(codigo) + " Erro interno ao gerar estatisticas." + _RESET)
             _aguardar_enter()
         elif opcao == "6":
             _limpar_ecra()
-            simular_mes()
+            obj, codigo = simular_mes()
+            if codigo == 500:
+                print(_VERMELHO_B + str(codigo) + " Erro interno ao simular mes." + _RESET)
             _aguardar_enter()
         elif opcao == "0":
             _limpar_ecra()
             print(_VERDE + "Ate logo." + _RESET)
             break
         else:
-            print(_VERMELHO_B + "[HTTP 400] Opcao invalida." + _RESET)
+            print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
             _aguardar_enter()
