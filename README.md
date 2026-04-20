@@ -1,23 +1,30 @@
-https://docs.google.com/document/d/1Nx-fcNj_ut2M3mUhvd3cojEs4aUEs7kzg3kj5qBhDJU/edit?usp=sharing
+🏋️‍♂️ Sistema de Gestão de Ginásio
+📌 Descrição do Projeto
 
-O projeto consiste no desenvolvimento de um sistema de gestão de ginásio, que permite administrar informações essenciais como clientes, planos de treino e despesas.
+Este projeto consiste no desenvolvimento de um sistema de gestão de ginásio, criado para facilitar a administração de informações essenciais como:
 
-O objetivo é facilitar o controlo e organização do ginásio, permitindo:
+Clientes
+Planos de treino
+Pagamentos
+Despesas
 
-Registar novos clientes
-Associar clientes a planos de treino
-Acompanhar datas e pagamentos
-Controlar despesas do ginásio
+O principal objetivo é melhorar a organização, o controlo e a eficiência na gestão do ginásio, apoiando também uma melhor tomada de decisões.
 
-Este sistema ajuda a melhorar a eficiência da gestão e a tomada de decisões.
+🎯 Funcionalidades
 
+O sistema permite:
+
+✅ Registar novos clientes
+✅ Associar clientes a planos de treino
+✅ Acompanhar datas e pagamentos
+✅ Controlar despesas do ginásio
 🗄️ Base de Dados
 
-A base de dados é estruturada de forma simples utilizando dicionários para armazenar a informação.
+A base de dados é estruturada de forma simples, utilizando dicionários em Python para armazenar a informação.
 
 🔹 Entidade: Cliente
 
-Cada cliente é armazenado num dicionário com:
+Cada cliente é representado por um dicionário com os seguintes dados:
 
 ID (chave)
 Nome
@@ -34,7 +41,7 @@ clientes = {
 
 🔹 Entidade: Plano
 
-Os planos de treino são armazenados num dicionário com:
+Os planos de treino também são armazenados em dicionários com:
 
 ID do plano (chave)
 Nome do plano
@@ -47,26 +54,31 @@ planos = {
     101: ("Plano Mensal", 12, 30.0)
 }
 
-🔄 CRUD (Operações principais)
-
-O sistema implementa operações básicas de gestão de dados:
+🔄 Operações CRUD
+O sistema implementa as principais operações de gestão de dados:
 
 ➕ Create (Criar)
-
-Permite adicionar novos clientes e planos.
-Ex: registar um novo cliente ou criar um novo plano.
+Permite adicionar novos dados ao sistema.
+Exemplo:
+Registar um novo cliente
+Criar um novo plano
 
 📖 Read (Ler)
-
-Permite consultar dados existentes.
-Ex: listar todos os clientes ou ver detalhes de um plano.
+Permite consultar informações existentes.
+Exemplo:
+Listar todos os clientes
+Ver detalhes de um plano
 
 ✏️ Update (Atualizar)
 
-Permite modificar informações.
-Ex: alterar o plano de um cliente ou atualizar o número de telefone.
+Permite modificar dados já existentes.
+Exemplo:
+Alterar o plano de um cliente
+Atualizar o número de telefone
 
 ❌ Delete (Eliminar)
 
-Permite remover dados.
-Ex: apagar um cliente ou eliminar um plano.
+Permite remover dados do sistema.
+Exemplo:
+Apagar um cliente
+Eliminar um plano
