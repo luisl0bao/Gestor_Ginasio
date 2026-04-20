@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from src import dados
     from src.dados import clientes
@@ -25,15 +29,12 @@ def _ids_clientes():
 
 def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
     if not nome:
-        print(_VERMELHO_B + "[HTTP 400] Nome invalido." + _RESET)
         return None, 400
     for id_c in clientes:
         if clientes[id_c]["nome"] == nome:
-            print(_VERMELHO_B + "[HTTP 409] Ja existe um cliente com esse nome." + _RESET)
             return None, 409
     plano, codigo = obter_plano(id_plano)
     if codigo == 404:
-        print(_VERMELHO_B + "[HTTP 404] Plano nao existe." + _RESET)
         return None, 404
     clientes[dados.proximo_id_cliente] = {
         "nome": nome,
@@ -43,7 +44,6 @@ def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
         "data_inicio": data_inicio
     }
     dados.proximo_id_cliente = dados.proximo_id_cliente + 1
-    print(_VERDE_B + "[HTTP 201] Cliente adicionado." + _RESET)
     return clientes[dados.proximo_id_cliente - 1], 201
 
 def obter_cliente(id_cliente):
@@ -54,13 +54,11 @@ def obter_cliente(id_cliente):
 
 def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio):
     if id_cliente not in clientes:
-        print(_VERMELHO_B + "[HTTP 404] Cliente nao encontrado." + _RESET)
         return None, 404
     dados_cliente = clientes[id_cliente]
     if nome != "":
         for id_c in clientes:
             if id_c != id_cliente and clientes[id_c]["nome"] == nome:
-                print(_VERMELHO_B + "[HTTP 409] Ja existe um cliente com esse nome." + _RESET)
                 return None, 409
         dados_cliente["nome"] = nome
     if data_nascimento != "":
@@ -71,29 +69,23 @@ def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str,
         try:
             novo_id = int(id_plano_str)
         except (ValueError, TypeError):
-            print(_VERMELHO_B + "[HTTP 400] ID do plano invalido." + _RESET)
             return None, 400
         plano, codigo = obter_plano(novo_id)
         if codigo == 404:
-            print(_VERMELHO_B + "[HTTP 404] Plano nao existe." + _RESET)
             return None, 404
         dados_cliente["id_plano"] = novo_id
     if data_inicio != "":
         dados_cliente["data_inicio"] = data_inicio
-    print(_VERDE_B + "[HTTP 200] Cliente atualizado." + _RESET)
     return dados_cliente, 200
 
 def remover_cliente(id_cliente):
     if id_cliente not in clientes:
-        print(_VERMELHO_B + "[HTTP 404] Cliente nao encontrado." + _RESET)
         return None, 404
     del clientes[id_cliente]
-    print(_VERDE_B + "[HTTP 200] Cliente removido." + _RESET)
     return id_cliente, 200
 
 def mostrar_clientes():
     if len(clientes) == 0:
-        print(_AMARELO + "[HTTP 204] Nenhum cliente registado." + _RESET)
         return [], 204
     print()
     print(_VERDE + _BOLD + "[ CLIENTES ]" + _RESET)
@@ -117,7 +109,6 @@ def mostrar_clientes():
 
 def mostrar_cliente(id_cliente):
     if id_cliente not in clientes:
-        print(_VERMELHO_B + "[HTTP 404] Cliente nao encontrado." + _RESET)
         return None, 404
     dados_cliente = clientes[id_cliente]
     plano, _ = obter_plano(dados_cliente["id_plano"])
@@ -143,7 +134,6 @@ def mostrar_cliente(id_cliente):
 
 def pesquisar_cliente(pesquisa):
     if not pesquisa:
-        print(_VERMELHO_B + "[HTTP 400] Termo de pesquisa vazio." + _RESET)
         return None, 400
     print()
     print(_VERDE + _BOLD + "[ RESULTADOS ]" + _RESET)
@@ -159,6 +149,5 @@ def pesquisar_cliente(pesquisa):
             print(_CINZA + "-" * 40 + _RESET)
             encontrados.append(dados_cliente)
     if not encontrados:
-        print(_AMARELO + "[HTTP 404] Nenhum cliente encontrado." + _RESET)
         return [], 404
     return encontrados, 200
