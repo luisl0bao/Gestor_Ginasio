@@ -6,6 +6,7 @@ except ImportError:
     import dados
     from dados import clientes, planos, despesas
     from planos import obter_plano
+
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
 _BRANCO     = "\033[97m"
@@ -23,10 +24,9 @@ def _arredondar(valor):
 def _calcular_receita_mensal():
     total = 0.0
     for cliente in clientes.values():
-        plano = obter_plano(cliente["id_plano"])
-        if plano:
-            num_treinos, preco_treino = plano[1], plano[2]
-            total = total + (num_treinos * preco_treino)
+        plano, codigo = obter_plano(cliente["id_plano"])
+        if codigo == 200:
+            total = total + (plano[1] * plano[2])
     return _arredondar(total)
 
 def _calcular_total_despesas():
@@ -39,11 +39,10 @@ def _calcular_saldo():
     return _arredondar(_calcular_receita_mensal() - _calcular_total_despesas())
 
 def mostrar_relatorio_financeiro():
-    """[HTTP 200] Mostra o relatorio financeiro mensal."""
     try:
-        receita = _calcular_receita_mensal()
+        receita    = _calcular_receita_mensal()
         total_desp = _calcular_total_despesas()
-        saldo = _calcular_saldo()
+        saldo      = _calcular_saldo()
         print()
         print(_VERDE + _BOLD + "[ RELATORIO FINANCEIRO ]" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
@@ -61,11 +60,12 @@ def mostrar_relatorio_financeiro():
         else:
             print(_CINZA + "Saldo final: " + _RESET + _VERMELHO_B + str(saldo) + " EUR" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
+        return {"receita": receita, "despesas": total_desp, "saldo": saldo}, 200
     except Exception as erro:
         print(_VERMELHO_B + "[HTTP 500] Erro interno ao gerar relatorio: " + str(erro) + _RESET)
+        return None, 500
 
 def mostrar_estatisticas():
-    """[HTTP 200] Mostra estatisticas gerais do ginasio."""
     try:
         print()
         print(_VERDE + _BOLD + "[ ESTATISTICAS ]" + _RESET)
@@ -73,8 +73,8 @@ def mostrar_estatisticas():
         print(_CINZA + "Total clientes: " + _RESET + _AMARELO + str(len(clientes)) + _RESET)
         print(_CINZA + "Total planos: "   + _RESET + _AMARELO + str(len(planos))   + _RESET)
         print(_CINZA + "Total despesas: " + _RESET + _AMARELO + str(len(despesas)) + _RESET)
+        nome_plano_popular = ""
         if planos and clientes:
-            nome_plano_popular = ""
             max_clientes = 0
             for id_plano, dados_plano in planos.items():
                 total = sum(1 for c in clientes.values() if c["id_plano"] == id_plano)
@@ -83,9 +83,9 @@ def mostrar_estatisticas():
                     nome_plano_popular = dados_plano[0]
             if nome_plano_popular:
                 print(_CINZA + "Plano mais popular: " + _RESET + _MAGENTA + nome_plano_popular + _RESET)
-        receita = _calcular_receita_mensal()
+        receita    = _calcular_receita_mensal()
         total_desp = _calcular_total_despesas()
-        saldo = _calcular_saldo()
+        saldo      = _calcular_saldo()
         print(_CINZA + "Receita mensal: " + _RESET + _VERDE    + str(receita)    + " EUR" + _RESET)
         print(_CINZA + "Total despesas: " + _RESET + _VERMELHO + str(total_desp) + " EUR" + _RESET)
         if saldo >= 0:
@@ -93,11 +93,13 @@ def mostrar_estatisticas():
         else:
             print(_CINZA + "Saldo final: " + _RESET + _VERMELHO_B + str(saldo) + " EUR" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
+        return {"clientes": len(clientes), "planos": len(planos), "despesas": len(despesas),
+                "receita": receita, "saldo": saldo, "plano_popular": nome_plano_popular}, 200
     except Exception as erro:
         print(_VERMELHO_B + "[HTTP 500] Erro interno ao gerar estatisticas: " + str(erro) + _RESET)
+        return None, 500
 
 def simular_mes():
-    """[HTTP 200] Simula o fecho de um mes e acumula o saldo."""
     try:
         receita_simulada = 0.0
         print()
@@ -105,10 +107,9 @@ def simular_mes():
         print(_CINZA + "-" * 40 + _RESET)
         print(_BRANCO + _BOLD + "Entradas" + _RESET)
         for cliente in clientes.values():
-            plano = obter_plano(cliente["id_plano"])
-            if plano:
-                num_treinos, preco_treino = plano[1], plano[2]
-                valor = _arredondar(num_treinos * preco_treino)
+            plano, codigo = obter_plano(cliente["id_plano"])
+            if codigo == 200:
+                valor = _arredondar(plano[1] * plano[2])
                 receita_simulada = receita_simulada + valor
                 print(_CINZA + cliente["nome"] + " (" + plano[0] + "): " +
                       _RESET + _VERDE + "+" + str(valor) + " EUR" + _RESET)
@@ -136,5 +137,9 @@ def simular_mes():
             print(_CINZA + "Lucro total: " + _RESET + _VERMELHO_B + str(dados.saldo_acumulado) + " EUR" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         dados.proximo_mes = dados.proximo_mes + 1
+        return {"mes": dados.proximo_mes - 1, "receita": receita_simulada,
+                "despesas": total_gasto, "resultado": resultado,
+                "saldo_acumulado": dados.saldo_acumulado}, 200
     except Exception as erro:
         print(_VERMELHO_B + "[HTTP 500] Erro interno ao simular mes: " + str(erro) + _RESET)
+        return None, 500
