@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 try:
     from src import dados
     from src.dados import planos
@@ -22,17 +26,13 @@ def _ids_planos():
 
 def adicionar_plano(nome, num_treinos, preco_por_treino):
     if not nome or not isinstance(nome, str):
-        print(_VERMELHO_B + "[HTTP 400] Nome do plano invalido." + _RESET)
         return None, 400
     if not isinstance(num_treinos, int) or num_treinos <= 0:
-        print(_VERMELHO_B + "[HTTP 400] Numero de treinos invalido." + _RESET)
         return None, 400
     if not isinstance(preco_por_treino, (int, float)) or preco_por_treino <= 0:
-        print(_VERMELHO_B + "[HTTP 400] Preco invalido." + _RESET)
         return None, 400
     planos[dados.proximo_id_plano] = (nome, num_treinos, _arredondar(preco_por_treino))
     dados.proximo_id_plano = dados.proximo_id_plano + 1
-    print(_VERDE_B + "[HTTP 201] Plano adicionado." + _RESET)
     return planos[dados.proximo_id_plano - 1], 201
 
 def obter_plano(id_plano):
@@ -43,7 +43,6 @@ def obter_plano(id_plano):
 
 def modificar_plano(id_plano, nome, num_treinos, preco_por_treino):
     if id_plano not in planos:
-        print(_VERMELHO_B + "[HTTP 404] Plano nao encontrado." + _RESET)
         return None, 404
     plano_atual = planos[id_plano]
     if nome == "":
@@ -54,10 +53,8 @@ def modificar_plano(id_plano, nome, num_treinos, preco_por_treino):
         try:
             num_treinos = int(num_treinos)
             if num_treinos <= 0:
-                print(_VERMELHO_B + "[HTTP 400] Numero de treinos invalido." + _RESET)
                 return None, 400
         except (TypeError, ValueError):
-            print(_VERMELHO_B + "[HTTP 400] Numero de treinos deve ser um inteiro." + _RESET)
             return None, 400
     if preco_por_treino == "":
         preco_por_treino = plano_atual[2]
@@ -65,18 +62,14 @@ def modificar_plano(id_plano, nome, num_treinos, preco_por_treino):
         try:
             preco_por_treino = _arredondar(float(preco_por_treino))
             if preco_por_treino <= 0:
-                print(_VERMELHO_B + "[HTTP 400] Preco invalido." + _RESET)
                 return None, 400
         except (TypeError, ValueError):
-            print(_VERMELHO_B + "[HTTP 400] Preco deve ser um numero." + _RESET)
             return None, 400
     planos[id_plano] = (nome, num_treinos, preco_por_treino)
-    print(_VERDE_B + "[HTTP 200] Plano atualizado." + _RESET)
     return planos[id_plano], 200
 
 def remover_plano(id_plano):
     if id_plano not in planos:
-        print(_VERMELHO_B + "[HTTP 404] Plano nao encontrado." + _RESET)
         return None, 404
     try:
         from src.dados import clientes as _clientes
@@ -84,15 +77,12 @@ def remover_plano(id_plano):
         from dados import clientes as _clientes
     for id_cliente in _clientes:
         if _clientes[id_cliente]["id_plano"] == id_plano:
-            print(_VERMELHO_B + "[HTTP 409] Existem clientes com este plano. Remove-os primeiro." + _RESET)
             return None, 409
     del planos[id_plano]
-    print(_VERDE_B + "[HTTP 200] Plano removido." + _RESET)
     return id_plano, 200
 
 def mostrar_planos():
     if len(planos) == 0:
-        print(_AMARELO + "[HTTP 204] Nenhum plano registado." + _RESET)
         return [], 204
     try:
         from src.dados import clientes as _clientes
@@ -115,7 +105,6 @@ def mostrar_planos():
 
 def mostrar_plano(id_plano):
     if id_plano not in planos:
-        print(_VERMELHO_B + "[HTTP 404] Plano nao encontrado." + _RESET)
         return None, 404
     dados_plano = planos[id_plano]
     preco_mensal = _arredondar(dados_plano[1] * dados_plano[2])
