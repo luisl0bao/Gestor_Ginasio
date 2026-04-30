@@ -1,5 +1,6 @@
 import os
 import sys
+from src.pagamentos import menu_pagamentos
 from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -288,9 +289,11 @@ def _criar_despesa():
     _limpar_ecra()
     print(_VERDE + _BOLD + "[ NOVA DESPESA ]" + _RESET)
     print()
-    descricao   = _pedir_texto("Descricao: ")
-    valor       = _pedir_decimal_positivo("Valor (EUR): ")
-    obj, codigo = adicionar_despesa(descricao, valor)
+    descricao        = _pedir_texto("Descricao: ")
+    valor            = _pedir_decimal_positivo("Valor (EUR): ")
+    data_str         = input(_AMARELO + "Data (DD/MM/AAAA, Enter = hoje): " + _RESET).strip()
+    data_despesa     = data_str if data_str else None
+    obj, codigo      = adicionar_despesa(descricao, valor, data_despesa)
     if codigo == 201:
         print(_VERDE_B + str(codigo) + " Sucesso, despesa " + str(obj[1]) + " adicionada." + _RESET)
     elif codigo == 400:
@@ -367,6 +370,7 @@ def menu_principal():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Relatorio financeiro" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Estatisticas"         + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Simular mes"          + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Pagamentos")
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Sair"                 + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -385,6 +389,10 @@ def menu_principal():
             if codigo == 500:
                 print(_VERMELHO_B + str(codigo) + " Erro interno ao gerar estatisticas." + _RESET)
             _aguardar_enter()
+
+        elif opcao == "7":
+            menu_pagamentos()
+
         elif opcao == "6":
             _limpar_ecra()
             obj, codigo = simular_mes()
