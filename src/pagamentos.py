@@ -1,11 +1,15 @@
+import os
+
 try:
     from src import dados
     from src.clientes import clientes
     from src.planos import obter_plano
+    from src.utils import _pedir_decimal_positivo, _pedir_id_valido, _pedir_confirmacao, _pedir_data
 except ImportError:
     import dados
     from clientes import clientes
     from planos import obter_plano
+    from utils import _pedir_decimal_positivo, _pedir_id_valido, _pedir_confirmacao, _pedir_data
 
 # garantir estrutura
 if not hasattr(dados, "pagamentos"):
@@ -27,6 +31,8 @@ _AMARELO    = "\033[33m"
 _VERMELHO   = "\033[31m"
 _VERMELHO_B = "\033[91m"
 _MAGENTA    = "\033[35m"
+_CIANO      = "\033[36m"
+_CIANO_B    = "\033[96m"
 
 
 def _arredondar(valor):
@@ -125,6 +131,14 @@ def gerar_pagamentos_fim_do_mes():
 #  MENU PAGAMENTOS
 # ──────────────────────────────────────────────────────────────────
 
+def _limpar_ecra():
+    os.system("cls" if os.name == "nt" else "clear")
+
+def _aguardar_enter():
+    input(_CINZA + "Enter para continuar..." + _RESET)
+    _limpar_ecra()
+
+
 def _mostrar_pagamentos():
     pagamentos = listar_pagamentos()
     if not pagamentos:
@@ -160,48 +174,178 @@ def _mostrar_transacoes():
             sinal = _VERDE_B + "+" + _RESET
             cor   = _VERDE
             total_entrada += t["valor"]
-        else:
+        elif t["tipo"] == "saida":
             sinal = _VERMELHO_B + "-" + _RESET
             cor   = _VERMELHO
             total_saida += t["valor"]
+        elif t["tipo"] == "transferencia_entrada":
+            sinal = _CIANO_B + "+" + _RESET
+            cor   = _CIANO
+            total_entrada += t["valor"]
+        elif t["tipo"] == "transferencia_saida":
+            sinal = _CIANO_B + "-" + _RESET
+            cor   = _CIANO
+            total_saida += t["valor"]
+        else:
+            sinal = " "
+            cor   = _BRANCO
         print(_AMARELO + f"ID: {t['id']:<4}" + _RESET +
               _CINZA   + "  Data: "  + _RESET + _BRANCO + t["data"] + _RESET +
               "  " + sinal + "  " + cor + f"{t['valor']:.2f} EUR" + _RESET)
         print(_CINZA + "     " + t["descricao"] + _RESET)
         print(_CINZA + "-" * 60 + _RESET)
-    print(_VERDE_B   + f"Entradas: +{_arredondar(total_entrada):.2f} EUR" + _RESET)
-    print(_VERMELHO_B + f"Saidas:   -{_arredondar(total_saida):.2f} EUR"  + _RESET)
+    print(_VERDE_B    + f"Entradas: +{_arredondar(total_entrada):.2f} EUR" + _RESET)
+    print(_VERMELHO_B + f"Saidas:   -{_arredondar(total_saida):.2f} EUR"   + _RESET)
     saldo = _arredondar(total_entrada - total_saida)
     cor_s = _VERDE_B if saldo >= 0 else _VERMELHO_B
     print(cor_s + _BOLD + f"Saldo:    {saldo:+.2f} EUR" + _RESET)
 
 
+def _adicionar_pagamento():
+    """Adiciona um pagamento manualmente, tal como as despesas."""
+    if not clientes:
+        print(_VERMELHO_B + "404 Nao existe nenhum cliente registado." + _RESET)
+        _aguardar_enter()
+        return
+    _limpar_ecra()
+    print(_VERDE + _BOLD + "[ NOVO PAGAMENTO ]" + _RESET)
+    print()
+    # mostrar lista resumida de clientes
+    print(_CINZA + "Clientes disponiveis:" + _RESET)
+    print(_CINZA + "-" * 40 + _RESET)
+    for id_c, c in clientes.items():
+        print(_AMARELO + f"  [{id_c}]" + _RESET + " " + _BRANCO + c["nome"] + _RESET)
+    print(_CINZA + "-" * 40 + _RESET)
+    print()
+    id_cliente = _pedir_id_valido("ID do cliente: ", list(clientes.keys()))
+    nome_cliente = _nome_cliente(id_cliente)
+    # sugerir plano do cliente
+    id_plano_cliente = clientes[id_cliente].get("id_plano")
+    plano_info, codigo = obter_plano(id_plano_cliente)
+    if codigo == 200 and plano_info:
+        nome_plano_sugerido = plano_info[0]
+        valor_sugerido      = round(plano_info[1] * plano_info[2], 2)
+        print(_CINZA + f"Plano atual: " + _RESET + _MAGENTA + nome_plano_sugerido + _RESET +
+              _CINZA + f"  Valor mensal: " + _RESET + _VERDE + f"{valor_sugerido:.2f} EUR" + _RESET)
+        print(_CINZA + "(Enter para usar o plano e valor atuais)" + _RESET)
+        plano_input = input(_AMARELO + "Nome do plano: " + _RESET).strip()
+        plano       = plano_input if plano_input else nome_plano_sugerido
+        valor_input = input(_AMARELO + "Valor (EUR): "   + _RESET).strip()
+        valor       = float(valor_input) if valor_input else valor_sugerido
+    else:
+        plano = input(_AMARELO + "Nome do plano: " + _RESET).strip() or "Sem plano"
+        valor = _pedir_decimal_positivo("Valor (EUR): ")
+    data_input   = input(_AMARELO + "Data (DD/MM/AAAA, Enter = hoje): " + _RESET).strip()
+    dia_pagamento = data_input if data_input else None
+    resultado = criar_pagamento(id_cliente, valor, plano, dia_pagamento)
+    if resultado:
+        print(_VERDE_B + f"201 Sucesso, pagamento de {nome_cliente} adicionado." + _RESET)
+    else:
+        print(_VERMELHO_B + "400 Erro ao adicionar pagamento." + _RESET)
+    _aguardar_enter()
+
+
+def _remover_pagamento():
+    """Remove um pagamento com confirmacao, tal como as despesas."""
+    if not listar_pagamentos():
+        print(_AMARELO + "Nenhum pagamento para remover." + _RESET)
+        _aguardar_enter()
+        return
+    _limpar_ecra()
+    _mostrar_pagamentos()
+    print()
+    ids_validos = list(dados.pagamentos.keys())
+    id_pag      = _pedir_id_valido("ID do pagamento a remover: ", ids_validos)
+    confirmar   = _pedir_confirmacao("Confirmar remocao")
+    if confirmar:
+        if apagar_pagamento(id_pag):
+            print(_VERDE_B + f"200 Sucesso, pagamento {id_pag} removido." + _RESET)
+        else:
+            print(_VERMELHO_B + "404 Pagamento nao encontrado." + _RESET)
+    else:
+        print(_CINZA + "Cancelado." + _RESET)
+    _aguardar_enter()
+
+
+def _adicionar_transferencia():
+    """Regista uma transferencia (entrada ou saida) no historico de transacoes."""
+    _limpar_ecra()
+    print(_VERDE + _BOLD + "[ NOVA TRANSFERENCIA ]" + _RESET)
+    print()
+    descricao = input(_AMARELO + "Descricao: " + _RESET).strip()
+    if not descricao:
+        print(_VERMELHO_B + "400 Descricao obrigatoria." + _RESET)
+        _aguardar_enter()
+        return
+    valor = _pedir_decimal_positivo("Valor (EUR): ")
+    print(_CIANO + "[1]" + _RESET + " Entrada  " + _CIANO + "[2]" + _RESET + " Saida")
+    tipo_input = input(_AMARELO + "Tipo: " + _RESET).strip()
+    if tipo_input == "1":
+        tipo = "transferencia_entrada"
+        label = "entrada"
+    elif tipo_input == "2":
+        tipo = "transferencia_saida"
+        label = "saida"
+    else:
+        print(_VERMELHO_B + "400 Opcao invalida. Usa 1 ou 2." + _RESET)
+        _aguardar_enter()
+        return
+    data_input = input(_AMARELO + "Data (DD/MM/AAAA, Enter = hoje): " + _RESET).strip()
+    data       = data_input if data_input else None
+    _registar_transacao(
+        descricao=f"Transferencia: {descricao}",
+        valor=valor,
+        tipo=tipo,
+        data=data
+    )
+    print(_CIANO_B + f"201 Sucesso, transferencia de {valor:.2f} EUR ({label}) registada." + _RESET)
+    _aguardar_enter()
+
+
 def menu_pagamentos():
     while True:
-        print()
+        _limpar_ecra()
         print(_VERDE + _BOLD + "[ PAGAMENTOS ]" + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         print(_MAGENTA + _BOLD + "[1]" + _RESET + " " + _BRANCO + "Ver pagamentos de clientes"    + _RESET)
-        print(_MAGENTA + _BOLD + "[2]" + _RESET + " " + _BRANCO + "Historico de todas transacoes" + _RESET)
-        print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Atualizar pagamento"           + _RESET)
-        print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Apagar pagamento"              + _RESET)
-        print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Resumo financeiro"             + _RESET)
+        print(_MAGENTA + _BOLD + "[2]" + _RESET + " " + _BRANCO + "Historico de transacoes"       + _RESET)
+        print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Adicionar pagamento"           + _RESET)
+        print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Remover pagamento"             + _RESET)
+        print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Adicionar transferencia"       + _RESET)
+        print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Atualizar pagamento"           + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Resumo financeiro"             + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"                        + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
 
         op = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
 
         if op == "1":
+            _limpar_ecra()
             _mostrar_pagamentos()
+            _aguardar_enter()
 
         elif op == "2":
+            _limpar_ecra()
             _mostrar_transacoes()
+            _aguardar_enter()
 
         elif op == "3":
+            _adicionar_pagamento()
+
+        elif op == "4":
+            _remover_pagamento()
+
+        elif op == "5":
+            _adicionar_transferencia()
+
+        elif op == "6":
+            _limpar_ecra()
             if not listar_pagamentos():
                 print(_AMARELO + "Nenhum pagamento para atualizar." + _RESET)
+                _aguardar_enter()
                 continue
             _mostrar_pagamentos()
+            print()
             try:
                 id_pag    = int(input(_AMARELO + "ID pagamento: " + _RESET))
                 novo_val  = input(_AMARELO + "Novo valor (Enter para manter): " + _RESET).strip()
@@ -213,44 +357,34 @@ def menu_pagamentos():
                     kwargs["dia_pagamento"] = nova_data
                 resultado = atualizar_pagamento(id_pag, **kwargs)
                 if resultado:
-                    print(_VERDE_B + "Pagamento atualizado." + _RESET)
+                    print(_VERDE_B + "200 Pagamento atualizado." + _RESET)
                 else:
-                    print(_VERMELHO_B + "Pagamento nao encontrado." + _RESET)
+                    print(_VERMELHO_B + "404 Pagamento nao encontrado." + _RESET)
             except ValueError:
-                print(_VERMELHO_B + "Valor invalido." + _RESET)
+                print(_VERMELHO_B + "400 Valor invalido." + _RESET)
+            _aguardar_enter()
 
-        elif op == "4":
-            if not listar_pagamentos():
-                print(_AMARELO + "Nenhum pagamento para apagar." + _RESET)
-                continue
-            _mostrar_pagamentos()
-            try:
-                id_pag = int(input(_AMARELO + "ID pagamento a remover: " + _RESET))
-                if apagar_pagamento(id_pag):
-                    print(_VERDE_B + "Pagamento removido." + _RESET)
-                else:
-                    print(_VERMELHO_B + "Pagamento nao encontrado." + _RESET)
-            except ValueError:
-                print(_VERMELHO_B + "ID invalido." + _RESET)
-
-        elif op == "5":
+        elif op == "7":
+            _limpar_ecra()
             total_pag  = sum(p["valor"] for p in listar_pagamentos())
             transacoes = getattr(dados, "transacoes", [])
-            total_ent  = sum(t["valor"] for t in transacoes if t["tipo"] == "entrada")
-            total_sai  = sum(t["valor"] for t in transacoes if t["tipo"] == "saida")
+            total_ent  = sum(t["valor"] for t in transacoes if t["tipo"] in ("entrada", "transferencia_entrada"))
+            total_sai  = sum(t["valor"] for t in transacoes if t["tipo"] in ("saida",   "transferencia_saida"))
             saldo_liq  = _arredondar(total_ent - total_sai)
             print()
             print(_VERDE + _BOLD + "[ RESUMO FINANCEIRO ]" + _RESET)
-            print(_CINZA + "-" * 40 + _RESET)
-            print(_CINZA + "Total pagamentos recebidos: " + _RESET + _VERDE_B    + f"{_arredondar(total_pag):.2f} EUR" + _RESET)
-            print(_CINZA + "Total entradas (log):       " + _RESET + _VERDE_B    + f"{_arredondar(total_ent):.2f} EUR" + _RESET)
-            print(_CINZA + "Total saidas (despesas):    " + _RESET + _VERMELHO_B + f"{_arredondar(total_sai):.2f} EUR" + _RESET)
+            print(_CINZA + "-" * 44 + _RESET)
+            print(_CINZA + "Total pagamentos registados: " + _RESET + _VERDE_B    + f"{_arredondar(total_pag):.2f} EUR" + _RESET)
+            print(_CINZA + "Total entradas:              " + _RESET + _VERDE_B    + f"{_arredondar(total_ent):.2f} EUR" + _RESET)
+            print(_CINZA + "Total saidas:                " + _RESET + _VERMELHO_B + f"{_arredondar(total_sai):.2f} EUR" + _RESET)
             cor = _VERDE_B if saldo_liq >= 0 else _VERMELHO_B
-            print(_CINZA + "Saldo liquido:              " + _RESET + cor + _BOLD + f"{saldo_liq:+.2f} EUR" + _RESET)
-            print(_CINZA + "-" * 40 + _RESET)
+            print(_CINZA + "Saldo liquido:               " + _RESET + cor + _BOLD + f"{saldo_liq:+.2f} EUR" + _RESET)
+            print(_CINZA + "-" * 44 + _RESET)
+            _aguardar_enter()
 
         elif op == "0":
             break
 
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
+            _aguardar_enter()
