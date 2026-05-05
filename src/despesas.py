@@ -22,38 +22,14 @@ _VERMELHO_B = "\033[91m"
 def _arredondar(valor):
     return round(valor, 2)
 
-def _data_hoje():
-    """Usa data simulada se disponível, senão data real."""
-    return dados.data_simulada_str()
-
-def registar_transacao_saida(descricao, valor, data=None):
-    """Regista uma saída no log de transações. Chamável externamente (ex: simular_mes)."""
-    if not hasattr(dados, "transacoes"):
-        dados.transacoes = []
-    if not hasattr(dados, "proximo_id_transacao"):
-        dados.proximo_id_transacao = 1
-    if data is None:
-        data = _data_hoje()
-    dados.transacoes.append({
-        "id":        dados.proximo_id_transacao,
-        "tipo":      "saida",
-        "descricao": descricao,
-        "valor":     _arredondar(valor),
-        "data":      data
-    })
-    dados.proximo_id_transacao += 1
-
-def adicionar_despesa(descricao, valor, data_despesa=None):
+def adicionar_despesa(descricao, valor):
     if not descricao:
         return None, 400
     if not isinstance(valor, (int, float)) or valor <= 0:
         return None, 400
-    if data_despesa is None:
-        data_despesa = _data_hoje()
-    nova = (dados.proximo_id_despesa, descricao, _arredondar(valor), data_despesa)
+    nova = (dados.proximo_id_despesa, descricao, _arredondar(valor))
     despesas.append(nova)
-    registar_transacao_saida(descricao, valor, data=data_despesa)
-    dados.proximo_id_despesa += 1
+    dados.proximo_id_despesa = dados.proximo_id_despesa + 1
     return nova, 201
 
 def obter_despesa(id_despesa):
@@ -76,11 +52,9 @@ def mostrar_despesas():
     print(_VERDE + _BOLD + "[ DESPESAS ]" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
     for despesa in despesas:
-        data = despesa[3] if len(despesa) > 3 else "N/A"
         print(_AMARELO + "ID: "        + _RESET + _BRANCO   + str(despesa[0]) + _RESET)
         print(_CINZA   + "Descricao: " + _RESET + _BRANCO   + despesa[1]      + _RESET)
         print(_CINZA   + "Valor: "     + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
-        print(_CINZA   + "Data: "      + _RESET + _BRANCO   + data            + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
     return list(despesas), 200
 
@@ -88,13 +62,11 @@ def mostrar_despesa(id_despesa):
     despesa, codigo = obter_despesa(id_despesa)
     if codigo == 404:
         return None, 404
-    data = despesa[3] if len(despesa) > 3 else "N/A"
     print()
     print(_VERDE + _BOLD + "[ DESPESA ]" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
     print(_AMARELO + "ID: "        + _RESET + _BRANCO   + str(despesa[0]) + _RESET)
     print(_CINZA   + "Descricao: " + _RESET + _BRANCO   + despesa[1]      + _RESET)
     print(_CINZA   + "Valor: "     + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
-    print(_CINZA   + "Data: "      + _RESET + _BRANCO   + data            + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
     return despesa, 200
