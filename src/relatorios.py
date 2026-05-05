@@ -51,7 +51,9 @@ def mostrar_relatorio_financeiro():
         print()
         print(_BRANCO + _BOLD + "Despesas" + _RESET)
         for despesa in despesas:
-            print(_CINZA + despesa[1] + ": " + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
+            data_d = despesa[3] if len(despesa) > 3 else ""
+            data_str = f" [{data_d}]" if data_d else ""
+            print(_CINZA + despesa[1] + data_str + ": " + _RESET + _VERMELHO + str(despesa[2]) + " EUR" + _RESET)
         print(_CINZA + "Total: " + _RESET + _VERMELHO_B + str(total_desp) + " EUR" + _RESET)
         print()
         print(_BRANCO + _BOLD + "Saldo" + _RESET)
@@ -101,10 +103,19 @@ def mostrar_estatisticas():
 
 def simular_mes():
     try:
+        from src.pagamentos import gerar_pagamentos_fim_do_mes
+        from src.despesas import registar_transacao_saida
+
+        data_mes = dados.data_simulada_str()
+
+        # Gerar pagamentos dos clientes (entradas) — usa data_simulada internamente
+        gerar_pagamentos_fim_do_mes()
+
+        # Calcular receita simulada
         receita_simulada = 0.0
         print()
-        print(_VERDE + _BOLD + "[ SIMULACAO MENSAL - MES " + str(dados.proximo_mes) + " ]" + _RESET)
-        print(_CINZA + "-" * 40 + _RESET)
+        print(_VERDE + _BOLD + "[ SIMULACAO MENSAL - MES " + str(dados.proximo_mes) + " | " + data_mes + " ]" + _RESET)
+        print(_CINZA + "-" * 50 + _RESET)
         print(_BRANCO + _BOLD + "Entradas" + _RESET)
         for cliente in clientes.values():
             plano, codigo = obter_plano(cliente["id_plano"])
@@ -114,15 +125,24 @@ def simular_mes():
                 print(_CINZA + cliente["nome"] + " (" + plano[0] + "): " +
                       _RESET + _VERDE + "+" + str(valor) + " EUR" + _RESET)
         receita_simulada = _arredondar(receita_simulada)
+
         print()
         print(_BRANCO + _BOLD + "Saidas" + _RESET)
         total_gasto = 0.0
         for despesa in despesas:
             total_gasto = total_gasto + despesa[2]
             print(_CINZA + despesa[1] + ": " + _RESET + _VERMELHO + "-" + str(despesa[2]) + " EUR" + _RESET)
+            # Registar cada despesa como transação de saída com a data do mês simulado
+            registar_transacao_saida(
+                descricao=f"Despesa mensal - {despesa[1]}",
+                valor=despesa[2],
+                data=data_mes
+            )
         total_gasto = _arredondar(total_gasto)
+
         resultado = _arredondar(receita_simulada - total_gasto)
         dados.saldo_acumulado = _arredondar(dados.saldo_acumulado + resultado)
+
         print()
         print(_BRANCO + _BOLD + "Resultado" + _RESET)
         print(_CINZA + "Receita: "  + _RESET + _VERDE    + str(receita_simulada) + " EUR" + _RESET)
@@ -135,11 +155,17 @@ def simular_mes():
             print(_CINZA + "Lucro total: " + _RESET + _VERDE_B    + str(dados.saldo_acumulado) + " EUR" + _RESET)
         else:
             print(_CINZA + "Lucro total: " + _RESET + _VERMELHO_B + str(dados.saldo_acumulado) + " EUR" + _RESET)
-        print(_CINZA + "-" * 40 + _RESET)
-        dados.proximo_mes = dados.proximo_mes + 1
+        print(_CINZA + "-" * 50 + _RESET)
+
+        # Avançar mês e data simulada DEPOIS de registar tudo
+        dados.proximo_mes += 1
+        dados.avancar_mes()
+
         return {"mes": dados.proximo_mes - 1, "receita": receita_simulada,
                 "despesas": total_gasto, "resultado": resultado,
                 "saldo_acumulado": dados.saldo_acumulado}, 200
     except Exception as erro:
+        import traceback
+        traceback.print_exc()
         print(_VERMELHO_B + "[HTTP 500] Erro interno ao simular mes: " + str(erro) + _RESET)
         return None, 500
