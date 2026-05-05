@@ -51,6 +51,7 @@ def _registar_transacao(descricao, valor, tipo="entrada", data=None):
         "valor":     _arredondar(valor),
         "data":      data
     })
+    
     dados.proximo_id_transacao += 1
 
 def _nome_cliente(id_cliente):
