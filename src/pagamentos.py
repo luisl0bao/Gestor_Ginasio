@@ -302,6 +302,76 @@ def _adicionar_transferencia():
     _aguardar_enter()
 
 
+# ---------------------------------------------------------------------------
+# Guardar dados (chamado a partir do menu de pagamentos)
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+_PASTA_SRC_PAG    = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_JSON_PAG = os.path.join(_PASTA_SRC_PAG, "dados_ginasio.json")
+
+
+def _guardar_dados_pagamentos():
+    """Guarda todos os dados do ginásio em dados_ginasio.json."""
+    try:
+        from src import ginasios as mod_gin
+    except ImportError:
+        import ginasios as mod_gin
+
+    def _d(d):
+        return d.isoformat() if hasattr(d, "isoformat") else str(d)
+
+    default = {
+        "clientes":             {str(k): v for k, v in dados.clientes.items()},
+        "planos":               {str(k): list(v) for k, v in dados.planos.items()},
+        "despesas":             [list(x) for x in dados.despesas],
+        "pagamentos":           {str(k): dict(v) for k, v in dados.pagamentos.items()},
+        "transacoes":           list(dados.transacoes),
+        "proximo_id_cliente":   dados.proximo_id_cliente,
+        "proximo_id_plano":     dados.proximo_id_plano,
+        "proximo_id_despesa":   dados.proximo_id_despesa,
+        "proximo_id_pagamento": dados.proximo_id_pagamento,
+        "proximo_id_transacao": dados.proximo_id_transacao,
+        "proximo_mes":          dados.proximo_mes,
+        "saldo_acumulado":      dados.saldo_acumulado,
+        "data_simulada":        _d(dados.data_simulada),
+    }
+
+    ginasios_serial = {}
+    for gid, g in mod_gin._ginasios.items():
+        d = g["dados"]
+        ginasios_serial[str(gid)] = {
+            "id": g["id"], "nome": g["nome"],
+            "morada": g["morada"], "telefone": g["telefone"],
+            "dados": {
+                "clientes":             {str(k): v for k, v in d["clientes"].items()},
+                "planos":               {str(k): list(v) for k, v in d["planos"].items()},
+                "despesas":             [list(x) for x in d["despesas"]],
+                "pagamentos":           {str(k): dict(v) for k, v in d["pagamentos"].items()},
+                "transacoes":           list(d["transacoes"]),
+                "proximo_id_cliente":   d["proximo_id_cliente"],
+                "proximo_id_plano":     d["proximo_id_plano"],
+                "proximo_id_despesa":   d["proximo_id_despesa"],
+                "proximo_id_pagamento": d["proximo_id_pagamento"],
+                "proximo_id_transacao": d["proximo_id_transacao"],
+                "saldo_acumulado":      d["saldo_acumulado"],
+                "data_simulada":        _d(d["data_simulada"]),
+            }
+        }
+
+    payload = {
+        "proximo_id_ginasio": mod_gin._proximo_id_ginasio,
+        "ginasio_default":    default,
+        "ginasios":           ginasios_serial,
+    }
+
+    with open(_FICHEIRO_JSON_PAG, "w", encoding="utf-8") as f:
+        _json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    print(_VERDE_B + "Dados guardados em: " + _FICHEIRO_JSON_PAG + _RESET)
+
+
 def menu_pagamentos():
     while True:
         _limpar_ecra()
@@ -314,6 +384,7 @@ def menu_pagamentos():
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Adicionar transferencia"       + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Atualizar pagamento"           + _RESET)
         print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Resumo financeiro"             + _RESET)
+        print(_MAGENTA + _BOLD + "[8]" + _RESET + " " + _BRANCO + "Guardar dados"                 + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"                        + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
 
@@ -380,6 +451,10 @@ def menu_pagamentos():
             cor = _VERDE_B if saldo_liq >= 0 else _VERMELHO_B
             print(_CINZA + "Saldo liquido:               " + _RESET + cor + _BOLD + f"{saldo_liq:+.2f} EUR" + _RESET)
             print(_CINZA + "-" * 44 + _RESET)
+            _aguardar_enter()
+
+        elif op == "8":
+            _guardar_dados_pagamentos()
             _aguardar_enter()
 
         elif op == "0":

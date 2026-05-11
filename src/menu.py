@@ -1,6 +1,6 @@
 import os
 import sys
-from src.pagamentos import menu_pagamentos
+import json
 from datetime import date
 
 try:
@@ -26,6 +26,7 @@ try:
     from src.despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
     from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from src.utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
+    from src.pagamentos import menu_pagamentos
 except ImportError:
     import dados
     from dados import clientes, planos, despesas
@@ -34,6 +35,7 @@ except ImportError:
     from despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
     from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
+    from pagamentos import menu_pagamentos
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
@@ -45,6 +47,167 @@ _AMARELO    = "\033[33m"
 _VERMELHO   = "\033[31m"
 _VERMELHO_B = "\033[91m"
 _MAGENTA    = "\033[35m"
+
+# ---------------------------------------------------------------------------
+# Ficheiro de dados (na mesma pasta que este script)
+# ---------------------------------------------------------------------------
+_PASTA_SRC   = os.path.dirname(os.path.abspath(__file__))
+FICHEIRO_JSON = os.path.join(_PASTA_SRC, "dados_ginasio.json")
+
+
+def _guardar_dados():
+    """Serializa todo o estado para dados_ginasio.json."""
+    try:
+        import ginasios as mod_gin
+    except ImportError:
+        try:
+            from src import ginasios as mod_gin
+        except ImportError:
+            import ginasios as mod_gin
+
+    # helper: date -> str
+    def _d(d):
+        return d.isoformat() if hasattr(d, "isoformat") else str(d)
+
+    # Ginásio Default
+    default = {
+        "clientes":             {str(k): v for k, v in dados.clientes.items()},
+        "planos":               {str(k): list(v) for k, v in dados.planos.items()},
+        "despesas":             [list(d) for d in dados.despesas],
+        "pagamentos":           {str(k): dict(v) for k, v in dados.pagamentos.items()},
+        "transacoes":           list(dados.transacoes),
+        "proximo_id_cliente":   dados.proximo_id_cliente,
+        "proximo_id_plano":     dados.proximo_id_plano,
+        "proximo_id_despesa":   dados.proximo_id_despesa,
+        "proximo_id_pagamento": dados.proximo_id_pagamento,
+        "proximo_id_transacao": dados.proximo_id_transacao,
+        "proximo_mes":          dados.proximo_mes,
+        "saldo_acumulado":      dados.saldo_acumulado,
+        "data_simulada":        _d(dados.data_simulada),
+    }
+
+    # Ginásios extra
+    ginasios_serial = {}
+    for gid, g in mod_gin._ginasios.items():
+        d = g["dados"]
+        ginasios_serial[str(gid)] = {
+            "id": g["id"], "nome": g["nome"],
+            "morada": g["morada"], "telefone": g["telefone"],
+            "dados": {
+                "clientes":             {str(k): v for k, v in d["clientes"].items()},
+                "planos":               {str(k): list(v) for k, v in d["planos"].items()},
+                "despesas":             [list(x) for x in d["despesas"]],
+                "pagamentos":           {str(k): dict(v) for k, v in d["pagamentos"].items()},
+                "transacoes":           list(d["transacoes"]),
+                "proximo_id_cliente":   d["proximo_id_cliente"],
+                "proximo_id_plano":     d["proximo_id_plano"],
+                "proximo_id_despesa":   d["proximo_id_despesa"],
+                "proximo_id_pagamento": d["proximo_id_pagamento"],
+                "proximo_id_transacao": d["proximo_id_transacao"],
+                "saldo_acumulado":      d["saldo_acumulado"],
+                "data_simulada":        _d(d["data_simulada"]),
+            }
+        }
+
+    payload = {
+        "proximo_id_ginasio": mod_gin._proximo_id_ginasio,
+        "ginasio_default":    default,
+        "ginasios":           ginasios_serial,
+    }
+
+    with open(FICHEIRO_JSON, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def _carregar_dados() -> bool:
+    """Lê dados_ginasio.json e restaura o estado. Devolve True se carregou."""
+    if not os.path.exists(FICHEIRO_JSON):
+        return False
+
+    with open(FICHEIRO_JSON, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    try:
+        import ginasios as mod_gin
+    except ImportError:
+        try:
+            from src import ginasios as mod_gin
+        except ImportError:
+            import ginasios as mod_gin
+
+    from datetime import date
+
+    def _str_para_date(s):
+        return date.fromisoformat(s)
+
+    ds = payload["ginasio_default"]
+
+    dados.clientes.clear()
+    for k, v in ds["clientes"].items():
+        dados.clientes[int(k)] = v
+
+    dados.planos.clear()
+    for k, v in ds["planos"].items():
+        dados.planos[int(k)] = tuple(v)
+
+    dados.despesas.clear()
+    for item in ds["despesas"]:
+        dados.despesas.append(tuple(item))
+
+    dados.pagamentos.clear()
+    for k, v in ds["pagamentos"].items():
+        dados.pagamentos[int(k)] = v
+
+    dados.transacoes.clear()
+    dados.transacoes.extend(ds["transacoes"])
+
+    dados.proximo_id_cliente   = ds["proximo_id_cliente"]
+    dados.proximo_id_plano     = ds["proximo_id_plano"]
+    dados.proximo_id_despesa   = ds["proximo_id_despesa"]
+    dados.proximo_id_pagamento = ds["proximo_id_pagamento"]
+    dados.proximo_id_transacao = ds["proximo_id_transacao"]
+    dados.proximo_mes          = ds["proximo_mes"]
+    dados.saldo_acumulado      = ds["saldo_acumulado"]
+    dados.data_simulada        = _str_para_date(ds["data_simulada"])
+
+    mod_gin._ginasios.clear()
+    mod_gin._proximo_id_ginasio = payload.get("proximo_id_ginasio", 1)
+
+    for gid_str, g_serial in payload.get("ginasios", {}).items():
+        gid = int(gid_str)
+        d_s = g_serial["dados"]
+        d   = mod_gin._novo_estado_dados()
+
+        d["clientes"].clear()
+        for k, v in d_s["clientes"].items():
+            d["clientes"][int(k)] = v
+        d["planos"].clear()
+        for k, v in d_s["planos"].items():
+            d["planos"][int(k)] = tuple(v)
+        d["despesas"].clear()
+        for item in d_s["despesas"]:
+            d["despesas"].append(tuple(item))
+        d["pagamentos"].clear()
+        for k, v in d_s["pagamentos"].items():
+            d["pagamentos"][int(k)] = v
+        d["transacoes"].clear()
+        d["transacoes"].extend(d_s["transacoes"])
+
+        d["proximo_id_cliente"]   = d_s["proximo_id_cliente"]
+        d["proximo_id_plano"]     = d_s["proximo_id_plano"]
+        d["proximo_id_despesa"]   = d_s["proximo_id_despesa"]
+        d["proximo_id_pagamento"] = d_s["proximo_id_pagamento"]
+        d["proximo_id_transacao"] = d_s["proximo_id_transacao"]
+        d["saldo_acumulado"]      = d_s["saldo_acumulado"]
+        d["data_simulada"]        = _str_para_date(d_s["data_simulada"])
+
+        mod_gin._ginasios[gid] = {
+            "id": g_serial["id"], "nome": g_serial["nome"],
+            "morada": g_serial["morada"], "telefone": g_serial["telefone"],
+            "dados": d,
+        }
+
+    return True
 
 def _limpar_ecra():
     os.system("cls" if os.name == "nt" else "clear")
@@ -156,6 +319,7 @@ def menu_planos():
         print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Ler plano"       + _RESET)
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar plano" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Deletar plano"   + _RESET)
+        print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Guardar dados"   + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -164,6 +328,10 @@ def menu_planos():
         elif opcao == "3": _ler_plano()
         elif opcao == "4": _atualizar_plano()
         elif opcao == "5": _deletar_plano()
+        elif opcao == "6":
+            _guardar_dados()
+            print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -276,6 +444,7 @@ def menu_clientes():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar cliente" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Deletar cliente"   + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Pesquisar cliente" + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Guardar dados"     + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"            + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -292,6 +461,10 @@ def menu_clientes():
                 print(_AMARELO + str(codigo) + " Nenhum cliente encontrado." + _RESET)
             elif codigo == 400:
                 print(_VERMELHO_B + str(codigo) + " Termo de pesquisa invalido." + _RESET)
+            _aguardar_enter()
+        elif opcao == "7":
+            _guardar_dados()
+            print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
             _aguardar_enter()
         elif opcao == "0": break
         else:
@@ -362,6 +535,7 @@ def menu_despesas():
         print(_MAGENTA + _BOLD + "[2]" + _RESET + " " + _BRANCO + "Ler despesas"    + _RESET)
         print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Ler despesa"     + _RESET)
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Deletar despesa" + _RESET)
+        print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Guardar dados"   + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -369,6 +543,10 @@ def menu_despesas():
         elif opcao == "2": _ler_despesas()
         elif opcao == "3": _ler_despesa()
         elif opcao == "4": _deletar_despesa()
+        elif opcao == "5":
+            _guardar_dados()
+            print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -861,6 +1039,7 @@ def menu_ginasios():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar ginasio" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Remover ginasio"   + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Entrar num ginasio (gerir planos/clientes)" + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Guardar dados"     + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"            + _RESET)
         print(_CINZA + "-" * 44 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -879,6 +1058,10 @@ def menu_ginasios():
                 print()
                 id_ginasio = _pedir_id_valido("ID do ginasio: ", _ids_ginasios())
                 _menu_ginasio_interno(id_ginasio)
+        elif opcao == "7":
+            _guardar_dados()
+            print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -927,11 +1110,7 @@ def menu_principal():
             menu_ginasios()
 
         elif opcao == "9":
-            try:
-                from src.persistencia import guardar, FICHEIRO_JSON
-            except ImportError:
-                from persistencia import guardar, FICHEIRO_JSON
-            guardar()
+            _guardar_dados()
             print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
             _aguardar_enter()
 
