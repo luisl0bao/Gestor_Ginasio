@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -8,6 +9,33 @@ try:
 except ImportError:
     import dados
     from dados import despesas
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_DESPESAS = os.path.join(_PASTA, "despesas.json")
+
+
+def guardar_despesas():
+    """Guarda apenas os dados das despesas em despesas.json."""
+    payload = {
+        "despesas":           [list(d) for d in despesas],
+        "proximo_id_despesa": dados.proximo_id_despesa,
+    }
+    with open(_FICHEIRO_DESPESAS, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mDespesas guardadas em: " + _FICHEIRO_DESPESAS + "\033[0m")
+
+
+def carregar_despesas() -> bool:
+    """Carrega os dados das despesas de despesas.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_DESPESAS):
+        return False
+    with open(_FICHEIRO_DESPESAS, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    despesas.clear()
+    for item in payload["despesas"]:
+        despesas.append(tuple(item))
+    dados.proximo_id_despesa = payload["proximo_id_despesa"]
+    return True
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"

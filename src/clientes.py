@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -10,6 +11,33 @@ except ImportError:
     import dados
     from dados import clientes
     from planos import obter_plano
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_CLIENTES = os.path.join(_PASTA, "clientes.json")
+
+
+def guardar_clientes():
+    """Guarda apenas os dados dos clientes em clientes.json."""
+    payload = {
+        "clientes":           {str(k): v for k, v in clientes.items()},
+        "proximo_id_cliente": dados.proximo_id_cliente,
+    }
+    with open(_FICHEIRO_CLIENTES, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mClientes guardados em: " + _FICHEIRO_CLIENTES + "\033[0m")
+
+
+def carregar_clientes() -> bool:
+    """Carrega os dados dos clientes de clientes.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_CLIENTES):
+        return False
+    with open(_FICHEIRO_CLIENTES, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    clientes.clear()
+    for k, v in payload["clientes"].items():
+        clientes[int(k)] = v
+    dados.proximo_id_cliente = payload["proximo_id_cliente"]
+    return True
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"

@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -8,6 +9,33 @@ try:
 except ImportError:
     import dados
     from dados import planos
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_PLANOS = os.path.join(_PASTA, "planos.json")
+
+
+def guardar_planos():
+    """Guarda apenas os dados dos planos em planos.json."""
+    payload = {
+        "planos":           {str(k): list(v) for k, v in planos.items()},
+        "proximo_id_plano": dados.proximo_id_plano,
+    }
+    with open(_FICHEIRO_PLANOS, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mPlanos guardados em: " + _FICHEIRO_PLANOS + "\033[0m")
+
+
+def carregar_planos() -> bool:
+    """Carrega os dados dos planos de planos.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_PLANOS):
+        return False
+    with open(_FICHEIRO_PLANOS, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    planos.clear()
+    for k, v in payload["planos"].items():
+        planos[int(k)] = tuple(v)
+    dados.proximo_id_plano = payload["proximo_id_plano"]
+    return True
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
