@@ -53,9 +53,11 @@ def _arredondar(valor):
     return round(valor, 2)
 
 def _ids_clientes():
+    carregar_clientes()
     return list(clientes.keys())
 
 def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
+    carregar_clientes()
     if not nome:
         return None, 400
     for id_c in clientes:
@@ -76,12 +78,14 @@ def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
     return clientes[dados.proximo_id_cliente - 1], 201
 
 def obter_cliente(id_cliente):
+    carregar_clientes()
     cliente = clientes.get(id_cliente)
     if cliente is None:
         return None, 404
     return cliente, 200
 
 def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     dados_cliente = clientes[id_cliente]
@@ -109,6 +113,7 @@ def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str,
     return dados_cliente, 200
 
 def remover_cliente(id_cliente):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     del clientes[id_cliente]
