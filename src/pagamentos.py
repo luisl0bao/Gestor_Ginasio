@@ -1,4 +1,5 @@
 import os
+import json
 
 try:
     from src import dados
@@ -10,6 +11,38 @@ except ImportError:
     from clientes import clientes
     from planos import obter_plano
     from utils import _pedir_decimal_positivo, _pedir_id_valido, _pedir_confirmacao, _pedir_data
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_PAGAMENTOS = os.path.join(_PASTA, "pagamentos.json")
+
+
+def guardar_pagamentos():
+    """Guarda apenas os dados dos pagamentos e transações em pagamentos.json."""
+    payload = {
+        "pagamentos":           {str(k): dict(v) for k, v in dados.pagamentos.items()},
+        "transacoes":           list(dados.transacoes),
+        "proximo_id_pagamento": dados.proximo_id_pagamento,
+        "proximo_id_transacao": dados.proximo_id_transacao,
+    }
+    with open(_FICHEIRO_PAGAMENTOS, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mPagamentos guardados em: " + _FICHEIRO_PAGAMENTOS + "\033[0m")
+
+
+def carregar_pagamentos() -> bool:
+    """Carrega os dados dos pagamentos de pagamentos.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_PAGAMENTOS):
+        return False
+    with open(_FICHEIRO_PAGAMENTOS, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    dados.pagamentos.clear()
+    for k, v in payload["pagamentos"].items():
+        dados.pagamentos[int(k)] = v
+    dados.transacoes.clear()
+    dados.transacoes.extend(payload["transacoes"])
+    dados.proximo_id_pagamento = payload["proximo_id_pagamento"]
+    dados.proximo_id_transacao = payload["proximo_id_transacao"]
+    return True
 
 # garantir estrutura
 if not hasattr(dados, "pagamentos"):
@@ -59,6 +92,7 @@ def _nome_cliente(id_cliente):
 
 
 def criar_pagamento(id_cliente, valor, plano, dia_pagamento=None):
+    carregar_pagamentos()
     if id_cliente not in clientes:
         return None
     if dia_pagamento is None:
@@ -80,16 +114,20 @@ def criar_pagamento(id_cliente, valor, plano, dia_pagamento=None):
         data=dia_pagamento
     )
     dados.proximo_id_pagamento += 1
+    guardar_pagamentos()
     return dados.pagamentos[novo_id]
 
 
 def listar_pagamentos():
+    carregar_pagamentos()
     return list(dados.pagamentos.values())
 
 def buscar_pagamento(id_pagamento):
+    carregar_pagamentos()
     return dados.pagamentos.get(id_pagamento)
 
 def atualizar_pagamento(id_pagamento, valor=None, plano=None, dia_pagamento=None):
+    carregar_pagamentos()
     pagamento = dados.pagamentos.get(id_pagamento)
     if not pagamento:
         return None
@@ -99,17 +137,21 @@ def atualizar_pagamento(id_pagamento, valor=None, plano=None, dia_pagamento=None
         pagamento["plano"] = plano
     if dia_pagamento is not None:
         pagamento["dia_pagamento"] = dia_pagamento
+    guardar_pagamentos()
     return pagamento
 
 def apagar_pagamento(id_pagamento):
+    carregar_pagamentos()
     if id_pagamento in dados.pagamentos:
         del dados.pagamentos[id_pagamento]
+        guardar_pagamentos()
         return True
     return False
 
 
 def gerar_pagamentos_fim_do_mes():
     """Gera automaticamente um pagamento para cada cliente com a data simulada."""
+    carregar_pagamentos()
     for id_cliente, cliente in clientes.items():
         id_plano           = cliente.get("id_plano")
         plano_info, codigo = obter_plano(id_plano)
@@ -160,6 +202,7 @@ def _mostrar_pagamentos():
 
 
 def _mostrar_transacoes():
+    carregar_pagamentos()
     transacoes = getattr(dados, "transacoes", [])
     if not transacoes:
         print(_AMARELO + "Nenhuma transacao registada." + _RESET)
@@ -203,6 +246,7 @@ def _mostrar_transacoes():
 
 def _adicionar_pagamento():
     """Adiciona um pagamento manualmente, tal como as despesas."""
+    carregar_pagamentos()
     if not clientes:
         print(_VERMELHO_B + "404 Nao existe nenhum cliente registado." + _RESET)
         _aguardar_enter()
@@ -210,7 +254,6 @@ def _adicionar_pagamento():
     _limpar_ecra()
     print(_VERDE + _BOLD + "[ NOVO PAGAMENTO ]" + _RESET)
     print()
-    # mostrar lista resumida de clientes
     print(_CINZA + "Clientes disponiveis:" + _RESET)
     print(_CINZA + "-" * 40 + _RESET)
     for id_c, c in clientes.items():
@@ -219,7 +262,6 @@ def _adicionar_pagamento():
     print()
     id_cliente = _pedir_id_valido("ID do cliente: ", list(clientes.keys()))
     nome_cliente = _nome_cliente(id_cliente)
-    # sugerir plano do cliente
     id_plano_cliente = clientes[id_cliente].get("id_plano")
     plano_info, codigo = obter_plano(id_plano_cliente)
     if codigo == 200 and plano_info:
@@ -235,7 +277,7 @@ def _adicionar_pagamento():
     else:
         plano = input(_AMARELO + "Nome do plano: " + _RESET).strip() or "Sem plano"
         valor = _pedir_decimal_positivo("Valor (EUR): ")
-    data_input   = input(_AMARELO + "Data (DD/MM/AAAA, Enter = hoje): " + _RESET).strip()
+    data_input    = input(_AMARELO + "Data (DD/MM/AAAA, Enter = hoje): " + _RESET).strip()
     dia_pagamento = data_input if data_input else None
     resultado = criar_pagamento(id_cliente, valor, plano, dia_pagamento)
     if resultado:
@@ -298,6 +340,7 @@ def _adicionar_transferencia():
         tipo=tipo,
         data=data
     )
+    guardar_pagamentos()
     print(_CIANO_B + f"201 Sucesso, transferencia de {valor:.2f} EUR ({label}) registada." + _RESET)
     _aguardar_enter()
 
@@ -314,6 +357,7 @@ def menu_pagamentos():
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Adicionar transferencia"       + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Atualizar pagamento"           + _RESET)
         print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Resumo financeiro"             + _RESET)
+        print(_MAGENTA + _BOLD + "[8]" + _RESET + " " + _BRANCO + "Guardar pagamentos"            + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"                        + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
 
@@ -366,6 +410,7 @@ def menu_pagamentos():
 
         elif op == "7":
             _limpar_ecra()
+            carregar_pagamentos()
             total_pag  = sum(p["valor"] for p in listar_pagamentos())
             transacoes = getattr(dados, "transacoes", [])
             total_ent  = sum(t["valor"] for t in transacoes if t["tipo"] in ("entrada", "transferencia_entrada"))
@@ -384,6 +429,10 @@ def menu_pagamentos():
 
         elif op == "0":
             break
+
+        elif op == "8":
+            guardar_pagamentos()
+            _aguardar_enter()
 
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)

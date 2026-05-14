@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -10,6 +11,33 @@ except ImportError:
     import dados
     from dados import clientes
     from planos import obter_plano
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_CLIENTES = os.path.join(_PASTA, "clientes.json")
+
+
+def guardar_clientes():
+    """Guarda apenas os dados dos clientes em clientes.json."""
+    payload = {
+        "clientes":           {str(k): v for k, v in clientes.items()},
+        "proximo_id_cliente": dados.proximo_id_cliente,
+    }
+    with open(_FICHEIRO_CLIENTES, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mClientes guardados em: " + _FICHEIRO_CLIENTES + "\033[0m")
+
+
+def carregar_clientes() -> bool:
+    """Carrega os dados dos clientes de clientes.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_CLIENTES):
+        return False
+    with open(_FICHEIRO_CLIENTES, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    clientes.clear()
+    for k, v in payload["clientes"].items():
+        clientes[int(k)] = v
+    dados.proximo_id_cliente = payload["proximo_id_cliente"]
+    return True
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
@@ -25,9 +53,11 @@ def _arredondar(valor):
     return round(valor, 2)
 
 def _ids_clientes():
+    carregar_clientes()
     return list(clientes.keys())
 
 def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
+    carregar_clientes()
     if not nome:
         return None, 400
     for id_c in clientes:
@@ -44,15 +74,18 @@ def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
         "data_inicio": data_inicio
     }
     dados.proximo_id_cliente = dados.proximo_id_cliente + 1
+    guardar_clientes()
     return clientes[dados.proximo_id_cliente - 1], 201
 
 def obter_cliente(id_cliente):
+    carregar_clientes()
     cliente = clientes.get(id_cliente)
     if cliente is None:
         return None, 404
     return cliente, 200
 
 def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str, data_inicio):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     dados_cliente = clientes[id_cliente]
@@ -76,15 +109,19 @@ def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str,
         dados_cliente["id_plano"] = novo_id
     if data_inicio != "":
         dados_cliente["data_inicio"] = data_inicio
+    guardar_clientes()
     return dados_cliente, 200
 
 def remover_cliente(id_cliente):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     del clientes[id_cliente]
+    guardar_clientes()
     return id_cliente, 200
 
 def mostrar_clientes():
+    carregar_clientes()
     if len(clientes) == 0:
         return [], 204
     print()
@@ -108,6 +145,7 @@ def mostrar_clientes():
     return list(clientes.values()), 200
 
 def mostrar_cliente(id_cliente):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     dados_cliente = clientes[id_cliente]
@@ -133,6 +171,7 @@ def mostrar_cliente(id_cliente):
     return dados_cliente, 200
 
 def pesquisar_cliente(pesquisa):
+    carregar_clientes()
     if not pesquisa:
         return None, 400
     print()

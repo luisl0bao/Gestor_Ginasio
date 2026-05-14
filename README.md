@@ -1,95 +1,80 @@
-# 🏋️‍♂️ Sistema de Gestão de Ginásio
+# 🏋️ Sistema de Gestão de Ginásio
 
-## 📌 **Descrição do Projeto**
-
-Este projeto consiste no desenvolvimento de um sistema de gestão de ginásio, criado para facilitar a administração de informações essenciais como:
-
-- Clientes  
-- Planos de treino  
-- Pagamentos  
-- Despesas  
-
-O principal objetivo é melhorar a organização, o controlo e a eficiência na gestão do ginásio, apoiando também uma melhor tomada de decisões.
+Projeto académico desenvolvido em Python para gestão administrativa de um ginásio, com suporte a múltiplas instalações.
 
 ---
 
-## 🎯 **Funcionalidades**
+## 📦 Estrutura de Dados
 
-O sistema permite:
+Os dados são geridos em memória com dicionários Python e persistidos automaticamente em ficheiros JSON por módulo.
 
-- ✅ Registar novos clientes  
-- ✅ Associar clientes a planos de treino  
-- ✅ Acompanhar datas e pagamentos  
-- ✅ Controlar despesas do ginásio  
-
----
-
-## 🗄️ **Base de Dados**
-
-A base de dados é estruturada de forma simples, utilizando dicionários em Python para armazenar a informação.
-
-### 🔹 **Entidade: Cliente**
-
-Cada cliente é representado por um dicionário com os seguintes dados:
-
-- ID (chave)  
-- Nome  
-- Data de nascimento  
-- Número de telefone  
-- ID do plano atual  
-- Data de início do plano  
-
-📌 **Exemplo:**
-
+**Cliente**
 ```python
 clientes = {
-    1: ("João Silva", "2000-05-10", "912345678", 1, "2026-01-01")
+    1: {
+        "nome": "João Silva",
+        "data_nascimento": "2000-05-10",
+        "telefone": "912345678",
+        "id_plano": 1,
+        "data_inicio": "2026-01-01"
+    }
 }
 ```
-🔹 Entidade: Plano
 
-Os planos de treino também são armazenados em dicionários com:
-
-ID do plano (chave)
-Nome do plano
-Número de treinos
-Preço (mensal ou por treino)
-
-📌 Exemplo:
+**Plano de Treino**
 ```python
 planos = {
-    101: ("Plano Mensal", 12, 30.0)
+    1: ("Plano Mensal", 12, 30.0)  # nome, treinos/mês, preço/treino
 }
 ```
-🔄 Operações CRUD
 
-O sistema implementa as principais operações de gestão de dados:
+---
 
-➕ Create (Criar)
+## ⚙️ Funcionalidades
 
-Permite adicionar novos dados ao sistema.
-Exemplo:
+- Gestão completa de clientes, planos, despesas e pagamentos (CRUD)
+- Suporte a múltiplos ginásios com dados completamente isolados
+- Relatórios financeiros e estatísticas mensais
+- Simulação de fecho de mês com geração automática de pagamentos
+- Persistência automática por módulo — cada alteração é guardada de imediato no ficheiro JSON correspondente
 
-Registar um novo cliente
-Criar um novo plano
-📖 Read (Ler)
+---
 
-Permite consultar informações existentes.
-Exemplo:
+## 💾 Persistência
 
-Listar todos os clientes
-Ver detalhes de um plano
-✏️ Update (Atualizar)
+Cada módulo é responsável pelos seus próprios dados:
 
-Permite modificar dados já existentes.
-Exemplo:
+| Módulo | Ficheiro |
+|---|---|
+| `clientes.py` | `clientes.json` |
+| `planos.py` | `planos.json` |
+| `despesas.py` | `despesas.json` |
+| `pagamentos.py` | `pagamentos.json` |
+| `ginasios.py` | `ginasios.json` |
 
-Alterar o plano de um cliente
-Atualizar o número de telefone
-❌ Delete (Eliminar)
+As funções de leitura carregam os dados do ficheiro antes de apresentar informação. As funções de escrita guardam os dados no ficheiro após qualquer alteração.
 
-Permite remover dados do sistema.
-Exemplo:
+---
 
-Apagar um cliente
-Eliminar um plano
+## 🗂️ Estrutura do Projeto
+src/
+├── main.py          # Ponto de entrada
+├── menu.py          # Navegação e interface
+├── dados.py         # Estado global partilhado
+├── clientes.py      # Gestão de clientes
+├── planos.py        # Gestão de planos de treino
+├── despesas.py      # Gestão de despesas
+├── pagamentos.py    # Gestão de pagamentos e transações
+├── ginasios.py      # Gestão de ginásios adicionais
+├── relatorios.py    # Relatórios financeiros
+└── utils.py         # Utilitários de input
+
+---
+
+## 🚀 Como Executar
+
+```bash
+python src/main.py
+```
+
+Requer Python 3.8 ou superior. Sem dependências externas.

@@ -6,7 +6,11 @@ pagamentos, transações e contadores próprios), sem interferência entre si.
 
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_GINASIOS = os.path.join(_PASTA, "ginasios.json")
 
 # ---------------------------------------------------------------------------
 # Cores ANSI
@@ -25,28 +29,7 @@ _MAGENTA    = "\033[35m"
 # ---------------------------------------------------------------------------
 # Armazenamento global de ginásios
 # ---------------------------------------------------------------------------
-# Estrutura de cada ginásio:
-# {
-#   "id": int,
-#   "nome": str,
-#   "morada": str,
-#   "telefone": str,
-#   "dados": {          ← estado isolado equivalente a dados.py
-#       "clientes": {},
-#       "planos": {},
-#       "despesas": [],
-#       "pagamentos": {},
-#       "transacoes": [],
-#       "proximo_id_cliente": 1,
-#       "proximo_id_plano": 1,
-#       "proximo_id_despesa": 1,
-#       "proximo_id_pagamento": 1,
-#       "proximo_id_transacao": 1,
-#       "saldo_acumulado": 0.0,
-#   }
-# }
-
-_ginasios: dict = {}          # id_ginasio -> dict
+_ginasios: dict = {}
 _proximo_id_ginasio: int = 1
 
 
@@ -76,6 +59,7 @@ def _novo_estado_dados() -> dict:
 def adicionar_ginasio(nome: str, morada: str, telefone: str):
     """Cria um ginásio novo com dados isolados. Retorna (obj, codigo)."""
     global _proximo_id_ginasio
+    carregar_ginasios()
     if not nome or not isinstance(nome, str) or nome.strip() == "":
         return None, 400
     if not morada or not isinstance(morada, str) or morada.strip() == "":
@@ -86,7 +70,6 @@ def adicionar_ginasio(nome: str, morada: str, telefone: str):
     if not telefone.isdigit() or len(telefone) != 9:
         return None, 400
 
-    # Verificar nome duplicado
     nome = nome.strip()
     morada = morada.strip()
     for g in _ginasios.values():
@@ -102,11 +85,13 @@ def adicionar_ginasio(nome: str, morada: str, telefone: str):
     }
     _ginasios[_proximo_id_ginasio] = ginasio
     _proximo_id_ginasio += 1
+    guardar_ginasios()
     return ginasio, 201
 
 
 def obter_ginasio(id_ginasio: int):
     """Devolve (ginasio, 200) ou (None, 404)."""
+    carregar_ginasios()
     g = _ginasios.get(id_ginasio)
     if g is None:
         return None, 404
@@ -115,6 +100,7 @@ def obter_ginasio(id_ginasio: int):
 
 def modificar_ginasio(id_ginasio: int, nome: str, morada: str, telefone: str):
     """Atualiza os dados de identificação do ginásio. Campos vazios mantêm valor."""
+    carregar_ginasios()
     if id_ginasio not in _ginasios:
         return None, 404
     g = _ginasios[id_ginasio]
@@ -126,7 +112,6 @@ def modificar_ginasio(id_ginasio: int, nome: str, morada: str, telefone: str):
     if nome == "":
         nome = g["nome"]
     else:
-        # Verificar duplicado (ignorando o próprio)
         for gid, gv in _ginasios.items():
             if gid != id_ginasio and gv["nome"].lower() == nome.lower():
                 return None, 409
@@ -143,14 +128,17 @@ def modificar_ginasio(id_ginasio: int, nome: str, morada: str, telefone: str):
     g["nome"]     = nome
     g["morada"]   = morada
     g["telefone"] = telefone
+    guardar_ginasios()
     return g, 200
 
 
 def remover_ginasio(id_ginasio: int):
     """Remove um ginásio. Retorna (id, 200) ou (None, 404)."""
+    carregar_ginasios()
     if id_ginasio not in _ginasios:
         return None, 404
     del _ginasios[id_ginasio]
+    guardar_ginasios()
     return id_ginasio, 200
 
 
@@ -160,6 +148,7 @@ def remover_ginasio(id_ginasio: int):
 
 def mostrar_ginasios():
     """Imprime todos os ginásios. Retorna (lista, codigo)."""
+    carregar_ginasios()
     if not _ginasios:
         return [], 204
     print()
@@ -180,6 +169,7 @@ def mostrar_ginasios():
 
 def mostrar_ginasio(id_ginasio: int):
     """Imprime detalhes de um ginásio. Retorna (obj, codigo)."""
+    carregar_ginasios()
     g = _ginasios.get(id_ginasio)
     if g is None:
         return None, 404
@@ -200,16 +190,14 @@ def mostrar_ginasio(id_ginasio: int):
     return g, 200
 
 
-# ---------------------------------------------------------------------------
-# Helpers para o menu
-# ---------------------------------------------------------------------------
-
 def _ids_ginasios() -> list:
+    carregar_ginasios()
     return list(_ginasios.keys())
 
 
 def _resumo_ginasios():
     """Imprime uma linha resumida por ginásio (para seleção rápida)."""
+    carregar_ginasios()
     if not _ginasios:
         return [], 204
     print(_CINZA + "Ginasios disponiveis:" + _RESET)
@@ -218,3 +206,102 @@ def _resumo_ginasios():
               _BRANCO + g["nome"] + _RESET +
               _CINZA + " — " + g["morada"] + _RESET)
     return list(_ginasios.values()), 200
+
+
+# ---------------------------------------------------------------------------
+# Guardar / Carregar ginásios
+# ---------------------------------------------------------------------------
+
+def guardar_ginasios():
+    """Guarda apenas os dados dos ginásios em ginasios.json."""
+    def _d(d):
+        return d.isoformat() if hasattr(d, "isoformat") else str(d)
+
+    ginasios_serial = {}
+    for gid, g in _ginasios.items():
+        d = g["dados"]
+        ginasios_serial[str(gid)] = {
+            "id":       g["id"],
+            "nome":     g["nome"],
+            "morada":   g["morada"],
+            "telefone": g["telefone"],
+            "dados": {
+                "clientes":             {str(k): v for k, v in d["clientes"].items()},
+                "planos":               {str(k): list(v) for k, v in d["planos"].items()},
+                "despesas":             [list(x) for x in d["despesas"]],
+                "pagamentos":           {str(k): dict(v) for k, v in d["pagamentos"].items()},
+                "transacoes":           list(d["transacoes"]),
+                "proximo_id_cliente":   d["proximo_id_cliente"],
+                "proximo_id_plano":     d["proximo_id_plano"],
+                "proximo_id_despesa":   d["proximo_id_despesa"],
+                "proximo_id_pagamento": d["proximo_id_pagamento"],
+                "proximo_id_transacao": d["proximo_id_transacao"],
+                "saldo_acumulado":      d["saldo_acumulado"],
+                "data_simulada":        _d(d["data_simulada"]),
+            }
+        }
+
+    payload = {
+        "proximo_id_ginasio": _proximo_id_ginasio,
+        "ginasios":           ginasios_serial,
+    }
+    with open(_FICHEIRO_GINASIOS, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mGinasios guardados em: " + _FICHEIRO_GINASIOS + "\033[0m")
+
+
+def carregar_ginasios() -> bool:
+    """Carrega os dados dos ginásios de ginasios.json. Devolve True se carregou."""
+    global _proximo_id_ginasio
+    if not os.path.exists(_FICHEIRO_GINASIOS):
+        return False
+
+    from datetime import date
+
+    with open(_FICHEIRO_GINASIOS, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+
+    _ginasios.clear()
+    _proximo_id_ginasio = payload.get("proximo_id_ginasio", 1)
+
+    for gid_str, g_serial in payload.get("ginasios", {}).items():
+        gid   = int(gid_str)
+        d_s   = g_serial["dados"]
+        d     = _novo_estado_dados()
+
+        d["clientes"].clear()
+        for k, v in d_s["clientes"].items():
+            d["clientes"][int(k)] = v
+
+        d["planos"].clear()
+        for k, v in d_s["planos"].items():
+            d["planos"][int(k)] = tuple(v)
+
+        d["despesas"].clear()
+        for item in d_s["despesas"]:
+            d["despesas"].append(tuple(item))
+
+        d["pagamentos"].clear()
+        for k, v in d_s["pagamentos"].items():
+            d["pagamentos"][int(k)] = v
+
+        d["transacoes"].clear()
+        d["transacoes"].extend(d_s["transacoes"])
+
+        d["proximo_id_cliente"]   = d_s["proximo_id_cliente"]
+        d["proximo_id_plano"]     = d_s["proximo_id_plano"]
+        d["proximo_id_despesa"]   = d_s["proximo_id_despesa"]
+        d["proximo_id_pagamento"] = d_s["proximo_id_pagamento"]
+        d["proximo_id_transacao"] = d_s["proximo_id_transacao"]
+        d["saldo_acumulado"]      = d_s["saldo_acumulado"]
+        d["data_simulada"]        = date.fromisoformat(d_s["data_simulada"])
+
+        _ginasios[gid] = {
+            "id":       g_serial["id"],
+            "nome":     g_serial["nome"],
+            "morada":   g_serial["morada"],
+            "telefone": g_serial["telefone"],
+            "dados":    d,
+        }
+
+    return True

@@ -24,6 +24,12 @@ try:
     from src.planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
     from src.clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
     from src.despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from src.pagamentos import menu_pagamentos
+    from src.ginasios import (
+        adicionar_ginasio, obter_ginasio, modificar_ginasio,
+        remover_ginasio, mostrar_ginasios, mostrar_ginasio,
+        _ids_ginasios, _resumo_ginasios, _ginasios,
+    )
     from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from src.utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
 except ImportError:
@@ -32,6 +38,12 @@ except ImportError:
     from planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
     from clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
     from despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from pagamentos import menu_pagamentos
+    from ginasios import (
+        adicionar_ginasio, obter_ginasio, modificar_ginasio,
+        remover_ginasio, mostrar_ginasios, mostrar_ginasio,
+        _ids_ginasios, _resumo_ginasios, _ginasios,
+    )
     from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
 
@@ -156,6 +168,7 @@ def menu_planos():
         print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Ler plano"       + _RESET)
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar plano" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Deletar plano"   + _RESET)
+        print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Guardar planos"  + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -164,6 +177,9 @@ def menu_planos():
         elif opcao == "3": _ler_plano()
         elif opcao == "4": _atualizar_plano()
         elif opcao == "5": _deletar_plano()
+        elif opcao == "6":
+            guardar_planos()
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -276,6 +292,7 @@ def menu_clientes():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar cliente" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Deletar cliente"   + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Pesquisar cliente" + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Guardar clientes"  + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"            + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -292,6 +309,9 @@ def menu_clientes():
                 print(_AMARELO + str(codigo) + " Nenhum cliente encontrado." + _RESET)
             elif codigo == 400:
                 print(_VERMELHO_B + str(codigo) + " Termo de pesquisa invalido." + _RESET)
+            _aguardar_enter()
+        elif opcao == "7":
+            guardar_clientes()
             _aguardar_enter()
         elif opcao == "0": break
         else:
@@ -358,17 +378,21 @@ def _deletar_despesa():
 def menu_despesas():
     while True:
         _mostrar_cabecalho("DESPESAS")
-        print(_MAGENTA + _BOLD + "[1]" + _RESET + " " + _BRANCO + "Criar despesa"   + _RESET)
-        print(_MAGENTA + _BOLD + "[2]" + _RESET + " " + _BRANCO + "Ler despesas"    + _RESET)
-        print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Ler despesa"     + _RESET)
-        print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Deletar despesa" + _RESET)
-        print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"          + _RESET)
+        print(_MAGENTA + _BOLD + "[1]" + _RESET + " " + _BRANCO + "Criar despesa"    + _RESET)
+        print(_MAGENTA + _BOLD + "[2]" + _RESET + " " + _BRANCO + "Ler despesas"     + _RESET)
+        print(_MAGENTA + _BOLD + "[3]" + _RESET + " " + _BRANCO + "Ler despesa"      + _RESET)
+        print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Deletar despesa"  + _RESET)
+        print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Guardar despesas" + _RESET)
+        print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"           + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
         if   opcao == "1": _criar_despesa()
         elif opcao == "2": _ler_despesas()
         elif opcao == "3": _ler_despesa()
         elif opcao == "4": _deletar_despesa()
+        elif opcao == "5":
+            guardar_despesas()
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -861,6 +885,7 @@ def menu_ginasios():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Atualizar ginasio" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Remover ginasio"   + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Entrar num ginasio (gerir planos/clientes)" + _RESET)
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Guardar ginasios"  + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Voltar"            + _RESET)
         print(_CINZA + "-" * 44 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -879,6 +904,9 @@ def menu_ginasios():
                 print()
                 id_ginasio = _pedir_id_valido("ID do ginasio: ", _ids_ginasios())
                 _menu_ginasio_interno(id_ginasio)
+        elif opcao == "7":
+            guardar_ginasios()
+            _aguardar_enter()
         elif opcao == "0": break
         else:
             print(_VERMELHO_B + "400 Opcao invalida." + _RESET)
@@ -898,9 +926,8 @@ def menu_principal():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Relatorio financeiro" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Estatisticas"         + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Simular mes"          + _RESET)
-        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Pagamentos")
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Pagamentos"           + _RESET)
         print(_MAGENTA + _BOLD + "[8]" + _RESET + " " + _BRANCO + "Ginasios"             + _RESET)
-        print(_MAGENTA + _BOLD + "[9]" + _RESET + " " + _BRANCO + "Guardar dados"        + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Sair"                 + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -925,15 +952,6 @@ def menu_principal():
 
         elif opcao == "8":
             menu_ginasios()
-
-        elif opcao == "9":
-            try:
-                from src.persistencia import guardar, FICHEIRO_JSON
-            except ImportError:
-                from persistencia import guardar, FICHEIRO_JSON
-            guardar()
-            print(_VERDE_B + "Dados guardados em: " + FICHEIRO_JSON + _RESET)
-            _aguardar_enter()
 
         elif opcao == "6":
             _limpar_ecra()

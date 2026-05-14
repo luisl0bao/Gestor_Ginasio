@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
@@ -8,6 +9,33 @@ try:
 except ImportError:
     import dados
     from dados import despesas
+
+_PASTA = os.path.dirname(os.path.abspath(__file__))
+_FICHEIRO_DESPESAS = os.path.join(_PASTA, "despesas.json")
+
+
+def guardar_despesas():
+    """Guarda apenas os dados das despesas em despesas.json."""
+    payload = {
+        "despesas":           [list(d) for d in despesas],
+        "proximo_id_despesa": dados.proximo_id_despesa,
+    }
+    with open(_FICHEIRO_DESPESAS, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print("\033[92mDespesas guardadas em: " + _FICHEIRO_DESPESAS + "\033[0m")
+
+
+def carregar_despesas() -> bool:
+    """Carrega os dados das despesas de despesas.json. Devolve True se carregou."""
+    if not os.path.exists(_FICHEIRO_DESPESAS):
+        return False
+    with open(_FICHEIRO_DESPESAS, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    despesas.clear()
+    for item in payload["despesas"]:
+        despesas.append(tuple(item))
+    dados.proximo_id_despesa = payload["proximo_id_despesa"]
+    return True
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
@@ -44,6 +72,7 @@ def registar_transacao_saida(descricao, valor, data=None):
     dados.proximo_id_transacao += 1
 
 def adicionar_despesa(descricao, valor, data_despesa=None):
+    carregar_despesas()
     if not descricao:
         return None, 400
     if not isinstance(valor, (int, float)) or valor <= 0:
@@ -54,22 +83,27 @@ def adicionar_despesa(descricao, valor, data_despesa=None):
     despesas.append(nova)
     registar_transacao_saida(descricao, valor, data=data_despesa)
     dados.proximo_id_despesa += 1
+    guardar_despesas()
     return nova, 201
 
 def obter_despesa(id_despesa):
+    carregar_despesas()
     for despesa in despesas:
         if despesa[0] == id_despesa:
             return despesa, 200
     return None, 404
 
 def remover_despesa(id_despesa):
+    carregar_despesas()
     for despesa in despesas:
         if despesa[0] == id_despesa:
             despesas.remove(despesa)
+            guardar_despesas()
             return id_despesa, 200
     return None, 404
 
 def mostrar_despesas():
+    carregar_despesas()
     if len(despesas) == 0:
         return [], 204
     print()
@@ -85,6 +119,7 @@ def mostrar_despesas():
     return list(despesas), 200
 
 def mostrar_despesa(id_despesa):
+    carregar_despesas()
     despesa, codigo = obter_despesa(id_despesa)
     if codigo == 404:
         return None, 404
