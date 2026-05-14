@@ -106,6 +106,7 @@ def adicionar_ginasio(nome: str, morada: str, telefone: str):
     }
     _ginasios[_proximo_id_ginasio] = ginasio
     _proximo_id_ginasio += 1
+    guardar_ginasios()
     return ginasio, 201
 
 
@@ -147,6 +148,7 @@ def modificar_ginasio(id_ginasio: int, nome: str, morada: str, telefone: str):
     g["nome"]     = nome
     g["morada"]   = morada
     g["telefone"] = telefone
+    guardar_ginasios()
     return g, 200
 
 
@@ -155,6 +157,7 @@ def remover_ginasio(id_ginasio: int):
     if id_ginasio not in _ginasios:
         return None, 404
     del _ginasios[id_ginasio]
+    guardar_ginasios()
     return id_ginasio, 200
 
 
@@ -164,6 +167,7 @@ def remover_ginasio(id_ginasio: int):
 
 def mostrar_ginasios():
     """Imprime todos os ginásios. Retorna (lista, codigo)."""
+    carregar_ginasios()
     if not _ginasios:
         return [], 204
     print()
@@ -184,6 +188,7 @@ def mostrar_ginasios():
 
 def mostrar_ginasio(id_ginasio: int):
     """Imprime detalhes de um ginásio. Retorna (obj, codigo)."""
+    carregar_ginasios()
     g = _ginasios.get(id_ginasio)
     if g is None:
         return None, 404
@@ -204,16 +209,13 @@ def mostrar_ginasio(id_ginasio: int):
     return g, 200
 
 
-# ---------------------------------------------------------------------------
-# Helpers para o menu
-# ---------------------------------------------------------------------------
-
 def _ids_ginasios() -> list:
     return list(_ginasios.keys())
 
 
 def _resumo_ginasios():
     """Imprime uma linha resumida por ginásio (para seleção rápida)."""
+    carregar_ginasios()
     if not _ginasios:
         return [], 204
     print(_CINZA + "Ginasios disponiveis:" + _RESET)

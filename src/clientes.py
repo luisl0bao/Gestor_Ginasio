@@ -72,6 +72,7 @@ def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
         "data_inicio": data_inicio
     }
     dados.proximo_id_cliente = dados.proximo_id_cliente + 1
+    guardar_clientes()
     return clientes[dados.proximo_id_cliente - 1], 201
 
 def obter_cliente(id_cliente):
@@ -104,15 +105,18 @@ def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str,
         dados_cliente["id_plano"] = novo_id
     if data_inicio != "":
         dados_cliente["data_inicio"] = data_inicio
+    guardar_clientes()
     return dados_cliente, 200
 
 def remover_cliente(id_cliente):
     if id_cliente not in clientes:
         return None, 404
     del clientes[id_cliente]
+    guardar_clientes()
     return id_cliente, 200
 
 def mostrar_clientes():
+    carregar_clientes()
     if len(clientes) == 0:
         return [], 204
     print()
@@ -136,6 +140,7 @@ def mostrar_clientes():
     return list(clientes.values()), 200
 
 def mostrar_cliente(id_cliente):
+    carregar_clientes()
     if id_cliente not in clientes:
         return None, 404
     dados_cliente = clientes[id_cliente]
@@ -161,6 +166,7 @@ def mostrar_cliente(id_cliente):
     return dados_cliente, 200
 
 def pesquisar_cliente(pesquisa):
+    carregar_clientes()
     if not pesquisa:
         return None, 400
     print()

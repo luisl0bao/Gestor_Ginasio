@@ -113,13 +113,16 @@ def criar_pagamento(id_cliente, valor, plano, dia_pagamento=None):
         data=dia_pagamento
     )
     dados.proximo_id_pagamento += 1
+    guardar_pagamentos()
     return dados.pagamentos[novo_id]
 
 
 def listar_pagamentos():
+    carregar_pagamentos()
     return list(dados.pagamentos.values())
 
 def buscar_pagamento(id_pagamento):
+    carregar_pagamentos()
     return dados.pagamentos.get(id_pagamento)
 
 def atualizar_pagamento(id_pagamento, valor=None, plano=None, dia_pagamento=None):
@@ -132,11 +135,13 @@ def atualizar_pagamento(id_pagamento, valor=None, plano=None, dia_pagamento=None
         pagamento["plano"] = plano
     if dia_pagamento is not None:
         pagamento["dia_pagamento"] = dia_pagamento
+    guardar_pagamentos()
     return pagamento
 
 def apagar_pagamento(id_pagamento):
     if id_pagamento in dados.pagamentos:
         del dados.pagamentos[id_pagamento]
+        guardar_pagamentos()
         return True
     return False
 

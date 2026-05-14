@@ -82,6 +82,7 @@ def adicionar_despesa(descricao, valor, data_despesa=None):
     despesas.append(nova)
     registar_transacao_saida(descricao, valor, data=data_despesa)
     dados.proximo_id_despesa += 1
+    guardar_despesas()
     return nova, 201
 
 def obter_despesa(id_despesa):
@@ -94,10 +95,12 @@ def remover_despesa(id_despesa):
     for despesa in despesas:
         if despesa[0] == id_despesa:
             despesas.remove(despesa)
+            guardar_despesas()
             return id_despesa, 200
     return None, 404
 
 def mostrar_despesas():
+    carregar_despesas()
     if len(despesas) == 0:
         return [], 204
     print()
@@ -113,6 +116,7 @@ def mostrar_despesas():
     return list(despesas), 200
 
 def mostrar_despesa(id_despesa):
+    carregar_despesas()
     despesa, codigo = obter_despesa(id_despesa)
     if codigo == 404:
         return None, 404

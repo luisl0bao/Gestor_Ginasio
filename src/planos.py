@@ -61,6 +61,7 @@ def adicionar_plano(nome, num_treinos, preco_por_treino):
         return None, 400
     planos[dados.proximo_id_plano] = (nome, num_treinos, _arredondar(preco_por_treino))
     dados.proximo_id_plano = dados.proximo_id_plano + 1
+    guardar_planos()
     return planos[dados.proximo_id_plano - 1], 201
 
 def obter_plano(id_plano):
@@ -94,6 +95,7 @@ def modificar_plano(id_plano, nome, num_treinos, preco_por_treino):
         except (TypeError, ValueError):
             return None, 400
     planos[id_plano] = (nome, num_treinos, preco_por_treino)
+    guardar_planos()
     return planos[id_plano], 200
 
 def remover_plano(id_plano):
@@ -107,9 +109,11 @@ def remover_plano(id_plano):
         if _clientes[id_cliente]["id_plano"] == id_plano:
             return None, 409
     del planos[id_plano]
+    guardar_planos()
     return id_plano, 200
 
 def mostrar_planos():
+    carregar_planos()
     if len(planos) == 0:
         return [], 204
     try:
@@ -132,6 +136,7 @@ def mostrar_planos():
     return list(planos.values()), 200
 
 def mostrar_plano(id_plano):
+    carregar_planos()
     if id_plano not in planos:
         return None, 404
     dados_plano = planos[id_plano]
@@ -148,6 +153,7 @@ def mostrar_plano(id_plano):
     return dados_plano, 200
 
 def _resumo_planos():
+    carregar_planos()
     if len(planos) == 0:
         return [], 204
     print(_CINZA + "Planos disponiveis:" + _RESET)

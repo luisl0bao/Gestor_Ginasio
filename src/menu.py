@@ -21,30 +21,28 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from src import dados
     from src.dados import clientes, planos, despesas
-    from src.planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos, guardar_planos, carregar_planos
-    from src.clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes, guardar_clientes, carregar_clientes
-    from src.despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa, guardar_despesas, carregar_despesas
-    from src.pagamentos import menu_pagamentos, guardar_pagamentos, carregar_pagamentos
+    from src.planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
+    from src.clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
+    from src.despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from src.pagamentos import menu_pagamentos
     from src.ginasios import (
         adicionar_ginasio, obter_ginasio, modificar_ginasio,
         remover_ginasio, mostrar_ginasios, mostrar_ginasio,
         _ids_ginasios, _resumo_ginasios, _ginasios,
-        guardar_ginasios, carregar_ginasios,
     )
     from src.relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from src.utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
 except ImportError:
     import dados
     from dados import clientes, planos, despesas
-    from planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos, guardar_planos, carregar_planos
-    from clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes, guardar_clientes, carregar_clientes
-    from despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa, guardar_despesas, carregar_despesas
-    from pagamentos import menu_pagamentos, guardar_pagamentos, carregar_pagamentos
+    from planos import adicionar_plano, mostrar_planos, mostrar_plano, modificar_plano, remover_plano, _ids_planos, _resumo_planos
+    from clientes import adicionar_cliente, mostrar_clientes, mostrar_cliente, modificar_cliente, remover_cliente, pesquisar_cliente, _ids_clientes
+    from despesas import adicionar_despesa, mostrar_despesas, mostrar_despesa, remover_despesa
+    from pagamentos import menu_pagamentos
     from ginasios import (
         adicionar_ginasio, obter_ginasio, modificar_ginasio,
         remover_ginasio, mostrar_ginasios, mostrar_ginasio,
         _ids_ginasios, _resumo_ginasios, _ginasios,
-        guardar_ginasios, carregar_ginasios,
     )
     from relatorios import mostrar_relatorio_financeiro, mostrar_estatisticas, simular_mes, _calcular_receita_mensal, _calcular_total_despesas, _calcular_saldo
     from utils import _pedir_texto, _pedir_inteiro_positivo, _pedir_decimal_positivo, _pedir_data, _pedir_telefone, _pedir_id_valido, _pedir_confirmacao
@@ -928,9 +926,8 @@ def menu_principal():
         print(_MAGENTA + _BOLD + "[4]" + _RESET + " " + _BRANCO + "Relatorio financeiro" + _RESET)
         print(_MAGENTA + _BOLD + "[5]" + _RESET + " " + _BRANCO + "Estatisticas"         + _RESET)
         print(_MAGENTA + _BOLD + "[6]" + _RESET + " " + _BRANCO + "Simular mes"          + _RESET)
-        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Pagamentos")
+        print(_MAGENTA + _BOLD + "[7]" + _RESET + " " + _BRANCO + "Pagamentos"           + _RESET)
         print(_MAGENTA + _BOLD + "[8]" + _RESET + " " + _BRANCO + "Ginasios"             + _RESET)
-        print(_MAGENTA + _BOLD + "[9]" + _RESET + " " + _BRANCO + "Guardar dados"        + _RESET)
         print(_MAGENTA + _BOLD + "[0]" + _RESET + " " + _BRANCO + "Sair"                 + _RESET)
         print(_CINZA + "-" * 40 + _RESET)
         opcao = input(_MAGENTA + _BOLD + "> " + _RESET).strip()
@@ -955,15 +952,6 @@ def menu_principal():
 
         elif opcao == "8":
             menu_ginasios()
-
-        elif opcao == "9":
-            guardar_clientes()
-            guardar_planos()
-            guardar_despesas()
-            guardar_pagamentos()
-            guardar_ginasios()
-            print(_VERDE_B + "Todos os dados guardados." + _RESET)
-            _aguardar_enter()
 
         elif opcao == "6":
             _limpar_ecra()
