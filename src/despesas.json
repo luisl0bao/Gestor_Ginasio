@@ -1,0 +1,17 @@
+{
+  "despesas": [
+    [
+      1,
+      "Agua e Luz",
+      90.0,
+      "01/01/2025"
+    ],
+    [
+      2,
+      "Equipamentos",
+      160.0,
+      "01/01/2025"
+    ]
+  ],
+  "proximo_id_despesa": 3
+}
