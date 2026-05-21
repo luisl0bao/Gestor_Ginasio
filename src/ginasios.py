@@ -195,7 +195,7 @@ def obter_ginasio(id_ginasio: int):
     carregar_ginasios()
     g = _ginasios.get(id_ginasio)
     if g is None:
-        log.warning("Ginasio id=%d nao encontrado", id_ginasio)
+        log.error("Ginasio id=%d nao encontrado", id_ginasio)
         return None, 404
     return g, 200
 
@@ -204,7 +204,7 @@ def modificar_ginasio(id_ginasio: int, nome: str, morada: str, telefone: str):
     log.info("Tentativa de modificar ginasio id=%d", id_ginasio)
     carregar_ginasios()
     if id_ginasio not in _ginasios:
-        log.warning("Ginasio id=%d nao encontrado para modificacao", id_ginasio)
+        log.error("Ginasio id=%d nao encontrado para modificacao", id_ginasio)
         return None, 404
     g        = _ginasios[id_ginasio]
     nome     = nome.strip()     if nome     else ""
@@ -237,7 +237,7 @@ def remover_ginasio(id_ginasio: int):
     log.info("Tentativa de remover ginasio id=%d", id_ginasio)
     carregar_ginasios()
     if id_ginasio not in _ginasios:
-        log.warning("Ginasio id=%d nao encontrado para remocao", id_ginasio)
+        log.error("Ginasio id=%d nao encontrado para remocao", id_ginasio)
         return None, 404
     nome = _ginasios[id_ginasio]["nome"]
     del _ginasios[id_ginasio]
@@ -278,7 +278,7 @@ def mostrar_ginasio(id_ginasio: int):
     carregar_ginasios()
     g = _ginasios.get(id_ginasio)
     if g is None:
-        log.warning("Ginasio id=%d nao encontrado para mostrar", id_ginasio)
+        log.error("Ginasio id=%d nao encontrado para mostrar", id_ginasio)
         return None, 404
     total_clientes = len(g["dados"]["clientes"])
     total_planos   = len(g["dados"]["planos"])

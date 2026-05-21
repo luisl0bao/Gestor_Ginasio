@@ -3,9 +3,7 @@ try:
     from src.clientes import adicionar_cliente
     from src.despesas import adicionar_despesa
 except ImportError:
-    from planos import adicionar_plano
-    from clientes import adicionar_cliente
-    from despesas import adicionar_despesa
+    print("Falha ao importar dados, seguindo sem dados")
 
 def carregar_dados():
     adicionar_plano("Basico", 8, 3.50)

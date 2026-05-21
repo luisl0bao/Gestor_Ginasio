@@ -7,12 +7,9 @@ try:
     from src import dados
     from src.dados import planos
     from src.logger import obter_logger
+    log = obter_logger("planos")
 except ImportError:
-    import dados
-    from dados import planos
-    from logger import obter_logger
-
-log = obter_logger("planos")
+    log.critical("Erro ao importar")
 
 _PASTA           = os.path.dirname(os.path.abspath(__file__))
 _FICHEIRO_PLANOS = os.path.join(_PASTA, "planos.json")

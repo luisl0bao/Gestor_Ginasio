@@ -7,12 +7,10 @@ try:
     from src import dados
     from src.dados import despesas
     from src.logger import obter_logger
+    log = obter_logger("despesas")
 except ImportError:
-    import dados
-    from dados import despesas
-    from logger import obter_logger
+    log.error("Falha ao importar.")
 
-log = obter_logger("despesas")
 
 _PASTA             = os.path.dirname(os.path.abspath(__file__))
 _FICHEIRO_DESPESAS = os.path.join(_PASTA, "despesas.json")
@@ -120,7 +118,7 @@ def obter_despesa(id_despesa):
     for despesa in despesas:
         if despesa[0] == id_despesa:
             return despesa, 200
-    log.warning("Despesa id=%d nao encontrada", id_despesa)
+    log.error("Despesa id=%d nao encontrada", id_despesa)
     return None, 404
 
 
@@ -133,7 +131,7 @@ def remover_despesa(id_despesa):
             guardar_despesas()
             log.info("Despesa id=%d removida com sucesso", id_despesa)
             return id_despesa, 200
-    log.warning("Despesa id=%d nao encontrada para remocao", id_despesa)
+    log.error("Despesa id=%d nao encontrada para remocao", id_despesa)
     return None, 404
 
 
@@ -162,7 +160,7 @@ def mostrar_despesa(id_despesa):
     carregar_despesas()
     despesa, codigo = obter_despesa(id_despesa)
     if codigo == 404:
-        log.warning("Despesa id=%d nao encontrada para mostrar", id_despesa)
+        log.error("Despesa id=%d nao encontrada para mostrar", id_despesa)
         return None, 404
     data = despesa[3] if len(despesa) > 3 else "N/A"
     print()

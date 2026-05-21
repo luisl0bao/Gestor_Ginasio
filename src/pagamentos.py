@@ -7,14 +7,9 @@ try:
     from src.planos import obter_plano
     from src.utils import _pedir_decimal_positivo, _pedir_id_valido, _pedir_confirmacao, _pedir_data
     from src.logger import obter_logger
+    log = obter_logger("pagamentos")
 except ImportError:
-    import dados
-    from dados import clientes
-    from planos import obter_plano
-    from utils import _pedir_decimal_positivo, _pedir_id_valido, _pedir_confirmacao, _pedir_data
-    from logger import obter_logger
-
-log = obter_logger("pagamentos")
+    log.critical("Erro ao importar")
 
 _PASTA               = os.path.dirname(os.path.abspath(__file__))
 _FICHEIRO_PAGAMENTOS = os.path.join(_PASTA, "pagamentos.json")

@@ -8,13 +8,10 @@ try:
     from src.dados import clientes
     from src.planos import obter_plano
     from src.logger import obter_logger
+    log = obter_logger("clientes")
 except ImportError:
-    import dados
-    from dados import clientes
-    from planos import obter_plano
-    from logger import obter_logger
+    log.error("Falha ao importar")
 
-log = obter_logger("clientes")
 
 _PASTA             = os.path.dirname(os.path.abspath(__file__))
 _FICHEIRO_CLIENTES = os.path.join(_PASTA, "clientes.json")
@@ -94,11 +91,11 @@ def adicionar_cliente(nome, data_nascimento, telefone, id_plano, data_inicio):
         return None, 404
     novo_id = dados.proximo_id_cliente
     clientes[novo_id] = {
-        "nome":            nome,
-        "data_nascimento": data_nascimento,
-        "telefone":        telefone,
-        "id_plano":        id_plano,
-        "data_inicio":     data_inicio,
+        "nome": nome,
+        "data_nascimento":data_nascimento,
+        "telefone": telefone,
+        "id_plano": id_plano,
+        "data_inicio": data_inicio
     }
     dados.proximo_id_cliente += 1
     guardar_clientes()
@@ -111,7 +108,7 @@ def obter_cliente(id_cliente):
     carregar_clientes()
     cliente = clientes.get(id_cliente)
     if cliente is None:
-        log.warning("Cliente id=%d nao encontrado", id_cliente)
+        log.error("Cliente id=%d nao encontrado", id_cliente)
         return None, 404
     return cliente, 200
 
@@ -120,7 +117,7 @@ def modificar_cliente(id_cliente, nome, data_nascimento, telefone, id_plano_str,
     log.info("Tentativa de modificar cliente id=%d", id_cliente)
     carregar_clientes()
     if id_cliente not in clientes:
-        log.warning("Cliente id=%d nao encontrado para modificacao", id_cliente)
+        log.error("Cliente id=%d nao encontrado para modificacao", id_cliente)
         return None, 404
     dados_cliente = clientes[id_cliente]
     if nome != "":
@@ -196,7 +193,7 @@ def mostrar_cliente(id_cliente):
     log.info("A mostrar cliente id=%d", id_cliente)
     carregar_clientes()
     if id_cliente not in clientes:
-        log.warning("Cliente id=%d nao encontrado para mostrar", id_cliente)
+        log.error("Cliente id=%d nao encontrado para mostrar", id_cliente)
         return None, 404
     dados_cliente = clientes[id_cliente]
     plano, _ = obter_plano(dados_cliente["id_plano"])
@@ -241,7 +238,7 @@ def pesquisar_cliente(pesquisa):
             print(_CINZA + "-" * 40 + _RESET)
             encontrados.append(dados_cliente)
     if not encontrados:
-        log.info("Nenhum cliente encontrado para termo='%s'", pesquisa)
+        log.error("Nenhum cliente encontrado para termo='%s'", pesquisa)
         return [], 404
     log.info("Pesquisa concluida: %d resultado(s) para termo='%s'", len(encontrados), pesquisa)
     return encontrados, 200

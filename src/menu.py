@@ -1,6 +1,5 @@
 import os
 import sys
-from src.pagamentos import menu_pagamentos
 from datetime import date
 
 try:
@@ -9,12 +8,9 @@ try:
         remover_ginasio, mostrar_ginasios, mostrar_ginasio,
         _ids_ginasios, _resumo_ginasios, _ginasios,
     )
+    from src.pagamentos import menu_pagamentos
 except ImportError:
-    from ginasios import (
-        adicionar_ginasio, obter_ginasio, modificar_ginasio,
-        remover_ginasio, mostrar_ginasios, mostrar_ginasio,
-        _ids_ginasios, _resumo_ginasios, _ginasios,
-    )
+    print("Erro a importar")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
