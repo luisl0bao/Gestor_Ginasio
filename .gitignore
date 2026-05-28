@@ -2,3 +2,4 @@
 /.idea/*
 /src/*.json
 /src/__pycache__/logger.cpython-314.pyc
+/src/app.log
