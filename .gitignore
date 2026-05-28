@@ -1,0 +1,4 @@
+/src/__pycache__/*
+/.idea/*
+/src/*.json
+/src/__pycache__/logger.cpython-314.pyc
