@@ -2,10 +2,10 @@ try:
     from src import dados
     from src.dados import clientes, planos, despesas
     from src.planos import obter_plano
+    from src.pagamentos import gerar_pagamentos_fim_do_mes
+    from src.despesas import registar_transacao_saida
 except ImportError:
-    import dados
-    from dados import clientes, planos, despesas
-    from planos import obter_plano
+    print("Erro ao importar")
 
 _RESET      = "\033[0m"
 _BOLD       = "\033[1m"
@@ -103,9 +103,6 @@ def mostrar_estatisticas():
 
 def simular_mes():
     try:
-        from src.pagamentos import gerar_pagamentos_fim_do_mes
-        from src.despesas import registar_transacao_saida
-
         data_mes = dados.data_simulada_str()
 
         # Gerar pagamentos dos clientes (entradas) — usa data_simulada internamente
